@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="28" fill="#0F172A"/>
+  
+  <!-- Outer Box Outline -->
+  <path d="M64 24 L100 42 L100 86 L64 104 L28 86 L28 42 Z" fill="none" stroke="#38BDF8" stroke-width="4" stroke-linejoin="round"/>
+  
+  <!-- Inner Connections -->
+  <path d="M64 24 L64 64 M100 42 L64 64 M28 42 L64 64 M64 64 L64 104" fill="none" stroke="#0284C7" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Central AI Core Node -->
+  <circle cx="64" cy="64" r="8" fill="#38BDF8"/>
+  <circle cx="64" cy="24" r="4" fill="#F0F9FF"/>
+  <circle cx="100" cy="42" r="4" fill="#F0F9FF"/>
+  <circle cx="28" cy="42" r="4" fill="#F0F9FF"/>
+</svg>
