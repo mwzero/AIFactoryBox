@@ -30,14 +30,14 @@
 
 | Service | Description | Local URL |
 | :--- | :--- | :--- |
-| **FastAPI Orchestrator** | Primitive API Entrypoint & Router[cite: 1, 2] | `http://localhost:8080` |
-| **Scalar UI** | Interactive API Documentation Portal[cite: 2, 3] | `http://localhost:7000` |
-| **Open WebUI** | Conversational & RAG Playground[cite: 2, 3] | `http://localhost:3000` |
-| **LiteLLM Proxy** | Core LLM Gateway, Auth & Quota Manager[cite: 1, 3] | `http://localhost:4000` |
-| **Presidio Analyzer** | PII Detection Middleware[cite: 1, 3] | `http://localhost:5001` |
-| **Docling Engine** | Document Extraction Engine[cite: 1, 3] | `http://localhost:5003` |
-| **Faster-Whisper** | Speech Transcription Engine[cite: 1, 3] | `http://localhost:8000` |
-| **TEI Server** | Vector Embeddings Engine[cite: 1, 3] | `http://localhost:8001` |
+| **FastAPI Orchestrator** | Primitive API Entrypoint & Router | `http://localhost:8080` |
+| **Scalar UI** | Interactive API Documentation Portal | `http://localhost:7000` |
+| **Open WebUI** | Conversational & RAG Playground | `http://localhost:3000` |
+| **LiteLLM Proxy** | Core LLM Gateway, Auth & Quota Manager | `http://localhost:4000` |
+| **Presidio Analyzer** | PII Detection Middleware | `http://localhost:5001` |
+| **Docling Engine** | Document Extraction Engine | `http://localhost:5003` |
+| **Faster-Whisper** | Speech Transcription Engine | `http://localhost:8000` |
+| **TEI Server** | Vector Embeddings Engine | `http://localhost:8001` |
 
 ---
 
