@@ -32,10 +32,11 @@ Here is the formatted Markdown table based on your data and notebook services:
 
 | Service           | Description                                      | Local URL                   |
 | ----------------- | ------------------------------------------------ | --------------------------- |
+| AIFactory API     | APIs                                             | `http://localhost:8080`<br> |
 | Open WebUI        | Conversational & RAG Playground                  | `http://localhost:3000`<br> |
 | LiteLLM Proxy     | Core API Gateway & Router                        | `http://localhost:4000`<br> |
 | Scalar UI         | Interactive API Documentation Portal             | `http://localhost:7000`<br> |
 | Presidio Analyzer | PII Masking Middleware                           | `http://localhost:5001`<br> |
 | Docling Engine    | Document Extraction (`/v1/document/to-markdown`) | `http://localhost:5003`<br> |
 | Faster-Whisper    | Audio Transcription (`/v1/audio/transcribe`)     | `http://localhost:8000`<br> |
-| TEI Server | Vector Embeddings (`/v1/embeddings/generate`)           | `http://localhost:8001`<br> |
+| TEI Server        | Vector Embeddings (`/v1/embeddings/generate`)    | `http://localhost:8001`<br> |
