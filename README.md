@@ -20,9 +20,12 @@
 # 1. Clone the repository
 git clone [https://github.com/mwzero/AIFactoryBox.git](https://github.com/mwzero/AIFactoryBox.git)
 cd AIFactoryBox
+```
 
 # 2. Start the infrastructure
+```bash
 docker compose up -d
+```
 
 ## Service Endpoint & Interface Map
 Here is the formatted Markdown table based on your data and notebook services:
