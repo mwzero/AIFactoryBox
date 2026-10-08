@@ -49,7 +49,7 @@
 
 ### Installation & Run
 ```bash
-git clone [https://github.com/your-org/AIFactoryBox.git](https://github.com/your-org/AIFactoryBox.git)
+git clone [https://github.com/mwzero/AIFactoryBox.git](https://github.com/mwzero/AIFactoryBox.git)
 cd AIFactoryBox
 docker compose up -d
 ```
