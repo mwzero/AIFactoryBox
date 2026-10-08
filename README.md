@@ -2,16 +2,16 @@
   <img src="assets/logo.svg" alt="AIFactoryBox Logo" width="450">
 </p>
 
-**AIFactoryBox** is a self-hosted "in-a-box" Enterprise AI Services Gateway designed to serve, orchestrate, and secure standardized AI Micro-Primitive APIs (Document Extraction, PII Anonymization, Speech Transcription, Vector Embeddings) across enterprise applications[cite: 1].
+**AIFactoryBox** is a self-hosted "in-a-box" Enterprise AI Services Gateway designed to serve, orchestrate, and secure standardized AI Micro-Primitive APIs (Document Extraction, PII Anonymization, Speech Transcription, Vector Embeddings) across enterprise applications.
 
 ---
 
 ## 🌟 Key Features
 
-* **Anti-Vendor Lock-in**: Exposes standardized functional AI primitive endpoints independent of underlying models or providers[cite: 1].
-* **DLP & PII Masking Pipeline**: Automatic detection and anonymization of sensitive data prior to external LLM forwarding using Microsoft Presidio[cite: 1, 2].
-* **Control Plane & Governance**: Rate limiting, tenant budgeting, usage quota tracking, and audit logging via LiteLLM Proxy and PostgreSQL[cite: 1, 2].
-* **Playground & Interactive Docs**: Web UI for business users (Open WebUI) and interactive developer API portal (Scalar UI)[cite: 2, 3].
+* **Anti-Vendor Lock-in**: Exposes standardized functional AI primitive endpoints independent of underlying models or providers.
+* **DLP & PII Masking Pipeline**: Automatic detection and anonymization of sensitive data prior to external LLM forwarding using Microsoft Presidio.
+* **Control Plane & Governance**: Rate limiting, tenant budgeting, usage quota tracking, and audit logging via LiteLLM Proxy and PostgreSQL.
+* **Playground & Interactive Docs**: Web UI for business users (Open WebUI) and interactive developer API portal (Scalar UI).
 
 ---
 
