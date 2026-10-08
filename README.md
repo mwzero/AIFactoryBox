@@ -1,42 +1,56 @@
-# AIFactoryBox (Enterprise AI Services Gateway)
+<p align="center">
+  <img src="assets/logo.svg" alt="AIFactoryBox Logo" width="450">
+</p>
 
-**AIFactoryBox** is a self-hosted "in-a-box" solution designed to orchestrate, secure, and serve functional AI Micro-Primitive APIs (Document Extraction, PII Anonymization, Speech Transcription, Vector Embeddings) within enterprise infrastructure.
+**AIFactoryBox** is a self-hosted "in-a-box" Enterprise AI Services Gateway designed to serve, orchestrate, and secure standardized AI Micro-Primitive APIs (Document Extraction, PII Anonymization, Speech Transcription, Vector Embeddings) across enterprise applications[cite: 1].
 
-## Key Features
+---
 
-* **Anti-Vendor Lock-in**: Exposes standardized unified endpoints independent of underlying model providers.
-* **DLP & PII Masking**: Automatic anonymization of sensitive data prior to external forwarding using Microsoft Presidio.
-* **Control Plane & Governance**: Rate limiting, budget management, and tenant quota tracking powered by LiteLLM Proxy.
-* **Playground & Documentation**: Interactive user interface (Open WebUI) and developer portal (Scalar UI).
+## 🌟 Key Features
 
-## 🚀 Requirements and Quickstart
+* **Anti-Vendor Lock-in**: Exposes standardized functional AI primitive endpoints independent of underlying models or providers[cite: 1].
+* **DLP & PII Masking Pipeline**: Automatic detection and anonymization of sensitive data prior to external LLM forwarding using Microsoft Presidio[cite: 1, 2].
+* **Control Plane & Governance**: Rate limiting, tenant budgeting, usage quota tracking, and audit logging via LiteLLM Proxy and PostgreSQL[cite: 1, 2].
+* **Playground & Interactive Docs**: Web UI for business users (Open WebUI) and interactive developer API portal (Scalar UI)[cite: 2, 3].
 
-### Requirements
+---
+
+## 🛠️ Micro-Primitive APIs
+
+| Endpoint | Method | Input Payload | Output / Description | Backend Engine |
+| :--- | :--- | :--- | :--- | :--- |
+| `/v1/document/to-markdown` | `POST` | `multipart/form-data` (PDF, DOCX) | Structured Markdown preserving tables and layout | Docling (IBM) |
+| `/v1/privacy/anonymize` | `POST` | `application/json` (`text`, `entities`) | Anonymized text + temporary safe mapping | Microsoft Presidio |
+| `/v1/audio/transcribe` | `POST` | `multipart/form-data` (Audio/Video) | Timestamped text transcript with speaker diarization | Faster-Whisper |
+| `/v1/embeddings/generate` | `POST` | `application/json` (`inputs`) | Dense/sparse vector representations | HuggingFace TEI |
+
+---
+
+## 📍 Service Endpoint Map
+
+| Service | Description | Local URL |
+| :--- | :--- | :--- |
+| **FastAPI Orchestrator** | Primitive API Entrypoint & Router[cite: 1, 2] | `http://localhost:8080` |
+| **Scalar UI** | Interactive API Documentation Portal[cite: 2, 3] | `http://localhost:7000` |
+| **Open WebUI** | Conversational & RAG Playground[cite: 2, 3] | `http://localhost:3000` |
+| **LiteLLM Proxy** | Core LLM Gateway, Auth & Quota Manager[cite: 1, 3] | `http://localhost:4000` |
+| **Presidio Analyzer** | PII Detection Middleware[cite: 1, 3] | `http://localhost:5001` |
+| **Docling Engine** | Document Extraction Engine[cite: 1, 3] | `http://localhost:5003` |
+| **Faster-Whisper** | Speech Transcription Engine[cite: 1, 3] | `http://localhost:8000` |
+| **TEI Server** | Vector Embeddings Engine[cite: 1, 3] | `http://localhost:8001` |
+
+---
+
+## 🚀 Quickstart
+
+### Prerequisites
 * Docker Engine `>= 24.0`
 * Docker Compose `>= 2.20`
 
-### Quickstart
+### Installation & Run
 ```bash
-# 1. Clone the repository
-git clone [https://github.com/mwzero/AIFactoryBox.git](https://github.com/mwzero/AIFactoryBox.git)
+git clone [https://github.com/your-org/AIFactoryBox.git](https://github.com/your-org/AIFactoryBox.git)
 cd AIFactoryBox
-```
-
-# 2. Start the infrastructure
-```bash
 docker compose up -d
 ```
 
-## Service Endpoint & Interface Map
-Here is the formatted Markdown table based on your data and notebook services:
-
-| Service           | Description                                      | Local URL                   |
-| ----------------- | ------------------------------------------------ | --------------------------- |
-| AIFactory API     | APIs                                             | `http://localhost:8080`<br> |
-| Open WebUI        | Conversational & RAG Playground                  | `http://localhost:3000`<br> |
-| LiteLLM Proxy     | Core API Gateway & Router                        | `http://localhost:4000`<br> |
-| Scalar UI         | Interactive API Documentation Portal             | `http://localhost:7000`<br> |
-| Presidio Analyzer | PII Masking Middleware                           | `http://localhost:5001`<br> |
-| Docling Engine    | Document Extraction (`/v1/document/to-markdown`) | `http://localhost:5003`<br> |
-| Faster-Whisper    | Audio Transcription (`/v1/audio/transcribe`)     | `http://localhost:8000`<br> |
-| TEI Server        | Vector Embeddings (`/v1/embeddings/generate`)    | `http://localhost:8001`<br> |
