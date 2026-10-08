@@ -1,0 +1,125 @@
+version: '3.8'
+
+networks:
+  ai-gateway-net:
+    driver: bridge
+
+volumes:
+  litellm_data:
+  openwebui_data:
+  presidio_data:
+  langfuse_postgres_data:
+
+services:
+
+  # 1. FRONTEND & PLAYGROUND
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ai-playground-ui
+    ports:
+      - "3000:8080"
+    environment:
+      - OPENAI_API_BASE_URL=http://litellm-proxy:4000/v1
+      - OPENAI_API_KEY=sk-enterprise-gateway-key
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # 2. CORE GATEWAY & ROUTER (LiteLLM)
+  litellm-proxy:
+    image: ghcr.io/berriai/litellm:main-v1.35.0
+    container_name: ai-gateway-core
+    ports:
+      - "4000:4000"
+    environment:
+      - LITELLM_MASTER_KEY=sk-master-key-change-me
+      - DATABASE_URL=postgresql://litellm:litellm_pass@postgres-audit:5432/litellm_db
+    volumes:
+      - ./config/litellm-config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    networks:
+      - ai-gateway-net
+    depends_on:
+      - postgres-audit
+    restart: unless-stopped
+
+  # 3. PRIVACY & PII MASKING MIDDLEWARE
+  presidio-analyzer:
+    image: mcr.microsoft.com/presidio-analyzer:latest
+    container_name: pii-presidio-analyzer
+    ports:
+      - "5001:3000"
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  presidio-anonymizer:
+    image: mcr.microsoft.com/presidio-anonymizer:latest
+    container_name: pii-presidio-anonymizer
+    ports:
+      - "5002:3000"
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # 4. PRIMITIVE ENGINES
+  docling-service:
+    image: ds4sd/docling-serve:latest
+    container_name: engine-doc-extraction
+    ports:
+      - "5003:5000"
+    environment:
+      - OMP_NUM_THREADS=4
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: engine-speech-transcribe
+    ports:
+      - "8000:8000"
+    environment:
+      - WHISPER_MODEL=small
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  tei-embeddings:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: engine-vector-embeddings
+    ports:
+      - "8001:80"
+    command: ["--model-id", "BAAI/bge-small-en-v1.5"]
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # 5. CONTROL PLANE & OBSERVABILITY
+  postgres-audit:
+    image: postgres:15-alpine
+    container_name: controlplane-db
+    environment:
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=litellm_pass
+      - POSTGRES_DB=litellm_db
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  scalar-docs:
+    image: scalarapi/scalar:latest
+    container_name: gateway-docs-scalar
+    ports:
+      - "7000:8080"
+    environment:
+      - SCALAR_SPEC_URL=http://litellm-proxy:4000/openapi.json
+    networks:
+      - ai-gateway-net
+    depends_on:
+      - litellm-proxy
+    restart: unless-stopped
