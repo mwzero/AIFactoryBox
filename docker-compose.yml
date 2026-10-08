@@ -12,7 +12,35 @@ volumes:
 
 services:
 
+  # ==========================================
+  # 0. API ORCHESTRATOR SERVICE (FastAPI)
+  # ==========================================
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: ai-gateway-orchestrator
+    ports:
+      - "8080:8080"
+    environment:
+      - DOCLING_URL=http://engine-doc-extraction:5000/process
+      - PRESIDIO_ANALYZER_URL=http://pii-presidio-analyzer:3000/analyze
+      - PRESIDIO_ANONYMIZER_URL=http://pii-presidio-anonymizer:3000/anonymize
+      - WHISPER_URL=http://engine-speech-transcribe:8000/v1/audio/transcriptions
+      - TEI_URL=http://engine-vector-embeddings:80/embed
+    networks:
+      - ai-gateway-net
+    depends_on:
+      - docling-service
+      - presidio-analyzer
+      - presidio-anonymizer
+      - faster-whisper
+      - tei-embeddings
+    restart: unless-stopped
+
+  # ==========================================
   # 1. FRONTEND & PLAYGROUND
+  # ==========================================
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: ai-playground-ui
@@ -27,7 +55,9 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # ==========================================
   # 2. CORE GATEWAY & ROUTER (LiteLLM)
+  # ==========================================
   litellm-proxy:
     image: ghcr.io/berriai/litellm:main-v1.35.0
     container_name: ai-gateway-core
@@ -45,7 +75,9 @@ services:
       - postgres-audit
     restart: unless-stopped
 
+  # ==========================================
   # 3. PRIVACY & PII MASKING MIDDLEWARE
+  # ==========================================
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
     container_name: pii-presidio-analyzer
@@ -64,7 +96,9 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # ==========================================
   # 4. PRIMITIVE ENGINES
+  # ==========================================
   docling-service:
     image: ds4sd/docling-serve:latest
     container_name: engine-doc-extraction
@@ -97,7 +131,9 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # ==========================================
   # 5. CONTROL PLANE & OBSERVABILITY
+  # ==========================================
   postgres-audit:
     image: postgres:15-alpine
     container_name: controlplane-db
@@ -111,15 +147,16 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # Documentazione API Interattiva (punta all'openapi.json generato dall'orchestrator)
   scalar-docs:
     image: scalarapi/scalar:latest
     container_name: gateway-docs-scalar
     ports:
       - "7000:8080"
     environment:
-      - SCALAR_SPEC_URL=http://litellm-proxy:4000/openapi.json
+      - SCALAR_SPEC_URL=http://orchestrator:8080/openapi.json
     networks:
       - ai-gateway-net
     depends_on:
-      - litellm-proxy
+      - orchestrator
     restart: unless-stopped
