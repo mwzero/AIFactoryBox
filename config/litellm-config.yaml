@@ -1,14 +1,57 @@
 model_list:
+  # ==========================================
+  # 1. LLM & VISION MODELS
+  # ==========================================
+  # Modello Conversazionale Cloud Principale
   - model_name: gpt-4o
     litellm_params:
       model: openai/gpt-4o
       api_key: "os.environ/OPENAI_API_KEY"
 
+  # Modello Vision & Multimodale (Backend Ollama / vLLM locale)
+  - model_name: qwen2-vl
+    litellm_params:
+      model: openai/qwen2-vl
+      api_base: "http://engine-vision-ocr:8080/v1"
+      api_key: "none"
+
+  # ==========================================
+  # 2. VECTOR & EMBEDDINGS ENGINES
+  # ==========================================
+  # Server Hugging Face TEI Embeddings
   - model_name: text-embedding-bge
     litellm_params:
       model: openai/bge-small-en-v1.5
-      api_base: "http://tei-embeddings:80/v1"
+      api_base: "http://engine-vector-embeddings:80/v1"
+      api_key: "none"
 
+  # ==========================================
+  # 3. RE-RANKING ENGINES
+  # ==========================================
+  # Server Hugging Face TEI Re-Ranking
+  - model_name: bge-reranker-large
+    litellm_params:
+      model: openai/bge-reranker-large
+      api_base: "http://engine-rerank:80/v1"
+      api_key: "none"
+
+  # ==========================================
+  # 4. CONTENT GUARDRAILS & MODERATION
+  # ==========================================
+  # Llama Guard per la sicurezza dei prompt
+  - model_name: llama-guard-3
+    litellm_params:
+      model: openai/meta-llama/Llama-Guard-3-8B
+      api_base: "http://pii-guardrails:8000/v1"
+      api_key: "none"
+
+# ==========================================
+# GENERAL SETTINGS & CONTROL PLANE
+# ==========================================
 general_settings:
   master_key: "sk-master-key-change-me"
   database_url: "postgresql://litellm:litellm_pass@postgres-audit:5432/litellm_db"
+  
+  # Timeout e Retry Defaults per Chiamate Proxy
+  request_timeout: 60
+  num_retries: 2
