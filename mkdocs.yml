@@ -1,8 +1,8 @@
 site_name: AIFactoryBox
 site_description: Enterprise AI Services Gateway & Suite
-site_url: https://tuo-org.github.io/AIFactoryBox/
-repo_url: https://github.com/tuo-org/AIFactoryBox
-repo_name: tuo-org/AIFactoryBox
+site_url: https://mwzero.github.io/AIFactoryBox/
+repo_url: https://github.com/mwzero/AIFactoryBox
+repo_name: mwzero/AIFactoryBox
 
 theme:
   name: material
