@@ -28,6 +28,9 @@ services:
       - PRESIDIO_ANONYMIZER_URL=http://pii-presidio-anonymizer:3000/anonymize
       - WHISPER_URL=http://engine-speech-transcribe:8000/v1/audio/transcriptions
       - TEI_URL=http://engine-vector-embeddings:80/embed
+      - RERANK_URL=http://engine-rerank:80/rerank
+      - TTS_URL=http://engine-tts:5500/api/tts
+      - GUARDRAIL_URL=http://pii-guardrails:8000/v1/security/guardrail
     networks:
       - ai-gateway-net
     depends_on:
@@ -36,6 +39,9 @@ services:
       - presidio-anonymizer
       - faster-whisper
       - tei-embeddings
+      - tei-rerank
+      - piper-tts
+      - llama-guard
     restart: unless-stopped
 
   # ==========================================
@@ -76,7 +82,7 @@ services:
     restart: unless-stopped
 
   # ==========================================
-  # 3. PRIVACY & PII MASKING MIDDLEWARE
+  # 3. PRIVACY & PII MASKING / GUARDRAILS MIDDLEWARE
   # ==========================================
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
@@ -96,9 +102,22 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # AI Content Guardrails & Moderation (/v1/security/guardrail)
+  llama-guard:
+    image: vllm/vllm-openai:latest
+    container_name: pii-guardrails
+    ports:
+      - "5004:8000"
+    command: ["--model", "meta-llama/Llama-Guard-3-8B"]
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
   # ==========================================
   # 4. PRIMITIVE ENGINES
   # ==========================================
+
+  # A. Document Extraction Engine (/v1/document/to-markdown & /v1/document/extract-tables)
   docling-service:
     image: ds4sd/docling-serve:latest
     container_name: engine-doc-extraction
@@ -110,6 +129,7 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # B. Speech & Audio Engine (/v1/audio/transcribe)
   faster-whisper:
     image: fedirz/faster-whisper-server:latest-cpu
     container_name: engine-speech-transcribe
@@ -121,12 +141,44 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
+  # C. Text-to-Speech Engine (/v1/audio/synthesize)
+  piper-tts:
+    image: rhasspy/piper-tts:latest
+    container_name: engine-tts
+    ports:
+      - "5500:5500"
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # D. Vector & Embeddings Engine (/v1/embeddings/generate)
   tei-embeddings:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
     container_name: engine-vector-embeddings
     ports:
       - "8001:80"
     command: ["--model-id", "BAAI/bge-small-en-v1.5"]
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # E. Re-Ranking Engine (/v1/rerank)
+  tei-rerank:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
+    container_name: engine-rerank
+    ports:
+      - "8002:80"
+    command: ["--model-id", "BAAI/bge-reranker-large"]
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # F. Vision & OCR Engine (/v1/vision/ocr & /v1/vision/describe)
+  paddle-ocr:
+    image: paddlepaddle/paddleocr:latest
+    container_name: engine-vision-ocr
+    ports:
+      - "8003:8080"
     networks:
       - ai-gateway-net
     restart: unless-stopped
@@ -147,7 +199,7 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
-  # Documentazione API Interattiva (punta all'openapi.json generato dall'orchestrator)
+  # Documentazione API Interattiva (Scalar UI)
   scalar-docs:
     image: scalarapi/scalar:latest
     container_name: gateway-docs-scalar
