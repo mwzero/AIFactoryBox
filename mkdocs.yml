@@ -1,0 +1,50 @@
+site_name: AIFactoryBox
+site_description: Enterprise AI Services Gateway & Suite
+site_url: https://tuo-org.github.io/AIFactoryBox/
+repo_url: https://github.com/tuo-org/AIFactoryBox
+repo_name: tuo-org/AIFactoryBox
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - attr_list
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Micro-Primitive APIs: apis.md
+  - Deployment & Quickstart: quickstart.md
+  - Control Plane & Security: security.md
