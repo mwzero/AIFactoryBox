@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   ai-gateway-net:
     driver: bridge
@@ -119,7 +117,7 @@ services:
 
   # A. Document Extraction Engine (/v1/document/to-markdown & /v1/document/extract-tables)
   docling-service:
-    image: ds4sd/docling-serve:latest
+    image: quay.io/ds4sd/docling-serve:latest
     container_name: engine-doc-extraction
     ports:
       - "5003:5000"
