@@ -173,7 +173,7 @@ services:
 
   # F. Vision & OCR Engine (/v1/vision/ocr & /v1/vision/describe)
   paddle-ocr:
-    image: paddlepaddle/paddleocr:latest
+    image: paddlepaddle/paddleocr:latest-cpu
     container_name: engine-vision-ocr
     ports:
       - "8003:8080"
