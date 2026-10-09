@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://tuo-org.github.io/AIFactoryBox/</loc>
+         <lastmod>2026-10-09</lastmod>
+    </url>
+    <url>
+         <loc>https://tuo-org.github.io/AIFactoryBox/apis/</loc>
+         <lastmod>2026-10-09</lastmod>
+    </url>
+    <url>
+         <loc>https://tuo-org.github.io/AIFactoryBox/architecture/</loc>
+         <lastmod>2026-10-09</lastmod>
+    </url>
+    <url>
+         <loc>https://tuo-org.github.io/AIFactoryBox/quickstart/</loc>
+         <lastmod>2026-10-09</lastmod>
+    </url>
+    <url>
+         <loc>https://tuo-org.github.io/AIFactoryBox/security/</loc>
+         <lastmod>2026-10-09</lastmod>
+    </url>
+</urlset>
