@@ -1,0 +1,78 @@
+name: CI & Deployment Check
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-test:
+    name: 🐍 Python Lint & Code Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Orchestrator Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
+
+      - name: Lint Code with Flake8
+        run: |
+          # Interrompe la build se ci sono errori di sintassi o variabili non definite
+          flake8 orchestrator/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Warning non bloccanti per lo stile del codice
+          flake8 orchestrator/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  build-and-deploy-check:
+    name: 🐳 Docker Compose & Deployment Verification
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Orchestrator Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./orchestrator
+          file: ./orchestrator/Dockerfile
+          push: false
+          tags: ai-gateway-orchestrator:latest
+
+      - name: Start Infrastructure via Docker Compose
+        run: |
+          docker compose up -d --build
+
+      - name: Wait for Services Warmup
+        run: |
+          echo "In attesa dell'avvio completo dei servizi..."
+          sleep 15
+
+      - name: Check Container Statuses
+        run: |
+          docker compose ps
+
+      - name: Verify Orchestrator Healthcheck Endpoint
+        run: |
+          # Verifica che l'orchestratore risponda HTTP 200 sull'endpoint /health
+          curl --fail --retry 5 --retry-delay 3 http://localhost:8080/health || exit 1
+
+      - name: Cleanup Containers
+        if: always()
+        run: |
+          docker compose down -v
