@@ -1,3 +1,11 @@
+
+## Navigation Map
+
+Servizio | Public URL | Internal URL 
+Open WebUI Playground   | http://localhost/       | open-webui:8080
+Primitive APIs          | http://localhost/v1/*   | orchestrator:8080/v1/*
+Scalar API Docs         | http://localhost/docs   | scalar-docs:8080
+LiteLLM Admin UI        | http://localhost/admin/ | litellm-proxy:4000/ui/   Health Checkhttp://localhost/healthorchestrator:8080/health
 <p align="center">
   <img src="assets/logo.svg" alt="AIFactoryBox Logo" width="450">
 </p>
@@ -11,6 +19,16 @@
 * **AI Safety & Guardrails**: Real-time moderation and prompt injection detection before requests hit core models.
 * **Control Plane & Governance**: Rate limiting, tenant budgeting, usage quota tracking, and audit logging via LiteLLM Proxy and PostgreSQL.
 * **Playground & Interactive Docs**: Web UI for business users (Open WebUI) and interactive developer API portal (Scalar UI).
+
+## Navigation Map
+
+Servizio | Public URL | Internal URL |
+| :--- | :--- | :--- | 
+Open WebUI Playground  | http://localhost/       | open-webui:8080          |
+Primitive APIs         | http://localhost/v1/*   | orchestrator:8080/v1/*   |
+Scalar API Docs        | http://localhost/docs   | scalar-docs:8080         |
+LiteLLM Admin UI       | http://localhost/admin/ | litellm-proxy:4000/ui/   |  
+Health Check           | http://localhost/health | orchestrator:8080/health |
 
 ## 🛠️ Micro-Primitive APIs
 

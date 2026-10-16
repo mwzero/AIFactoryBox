@@ -11,15 +11,31 @@ volumes:
 services:
 
   # ==========================================
-  # 0. API ORCHESTRATOR SERVICE (FastAPI)
+  # REVERSE PROXY, CORS & ROUTING (Nginx)
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: ai-gateway-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - orchestrator
+      - open-webui
+      - litellm-proxy
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+  # ==========================================
+  # 0. API ORCHESTRATOR SERVICE (FastAPI + Scalar)
   # ==========================================
   orchestrator:
     build:
       context: ./orchestrator
       dockerfile: Dockerfile
     container_name: ai-gateway-orchestrator
-    ports:
-      - "8080:8080"
     environment:
       - DOCLING_URL=http://engine-doc-extraction:5000/process
       - PRESIDIO_ANALYZER_URL=http://pii-presidio-analyzer:3000/analyze
@@ -28,8 +44,7 @@ services:
       - TEI_URL=http://engine-vector-embeddings:80/embed
       - RERANK_URL=http://engine-rerank:80/rerank
       - TTS_URL=http://engine-tts:5500/api/tts
-      - GUARDRAIL_URL=http://pii-guardrails:8000/v1/chat/completions
-      - OCR_URL=http://engine-vision-ocr:8080/ocr
+      - OCR_URL=http://engine-vision-ocr:8000/tesseract
     networks:
       - ai-gateway-net
     depends_on:
@@ -40,7 +55,7 @@ services:
       - tei-embeddings
       - tei-rerank
       - piper-tts
-      - llama-guard
+      - tesseract-ocr
     restart: unless-stopped
 
   # ==========================================
@@ -49,11 +64,10 @@ services:
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: ai-playground-ui
-    ports:
-      - "3000:8080"
     environment:
       - OPENAI_API_BASE_URL=http://litellm-proxy:4000/v1
-      - OPENAI_API_KEY=${LITELLM_MASTER_KEY:-sk-enterprise-gateway-key}
+      - OPENAI_API_KEY=sk-enterprise-gateway-key
+      - PORT=8080
     volumes:
       - openwebui_data:/app/backend/data
     networks:
@@ -66,12 +80,9 @@ services:
   litellm-proxy:
     image: ghcr.io/berriai/litellm:main-v1.35.0
     container_name: ai-gateway-core
-    ports:
-      - "4000:4000"
     environment:
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-master-key-change-me}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD:-litellm_pass}@postgres-audit:5432/${POSTGRES_DB:-litellm_db}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LITELLM_MASTER_KEY=sk-master-key-change-me
+      - DATABASE_URL=postgresql://litellm:litellm_pass@postgres-audit:5432/litellm_db
     volumes:
       - ./config/litellm-config.yaml:/app/config.yaml
     command: ["--config", "/app/config.yaml", "--port", "4000"]
@@ -82,13 +93,11 @@ services:
     restart: unless-stopped
 
   # ==========================================
-  # 3. PRIVACY & PII MASKING / GUARDRAILS MIDDLEWARE
+  # 3. PRIVACY & PII MASKING
   # ==========================================
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
     container_name: pii-presidio-analyzer
-    ports:
-      - "5001:3000"
     networks:
       - ai-gateway-net
     restart: unless-stopped
@@ -96,89 +105,57 @@ services:
   presidio-anonymizer:
     image: mcr.microsoft.com/presidio-anonymizer:latest
     container_name: pii-presidio-anonymizer
-    ports:
-      - "5002:3000"
-    networks:
-      - ai-gateway-net
-    restart: unless-stopped
-
-  # AI Content Guardrails & Moderation (/v1/security/guardrail)
-  llama-guard:
-    image: vllm/vllm-openai:latest
-    container_name: pii-guardrails
-    ports:
-      - "5004:8000"
-    command: ["--model", "meta-llama/Llama-Guard-3-8B"]
     networks:
       - ai-gateway-net
     restart: unless-stopped
 
   # ==========================================
-  # 4. PRIMITIVE ENGINES
+  # 4. PRIMITIVE ENGINES (CPU STABLE)
   # ==========================================
-
-  # A. Document Extraction Engine (/v1/document/to-markdown)
   docling-service:
-    image: quay.io/ds4sd/docling-serve:latest
+    image: quay.io/ds4sd/docling-serve:cpu
     container_name: engine-doc-extraction
-    ports:
-      - "5003:5000"
     environment:
       - OMP_NUM_THREADS=4
     networks:
       - ai-gateway-net
     restart: unless-stopped
 
-  # B. Speech & Audio Engine (/v1/audio/transcribe)
   faster-whisper:
     image: fedirz/faster-whisper-server:latest-cpu
     container_name: engine-speech-transcribe
-    ports:
-      - "8000:8000"
     environment:
       - WHISPER_MODEL=small
     networks:
       - ai-gateway-net
     restart: unless-stopped
 
-  # C. Text-to-Speech Engine (/v1/audio/synthesize)
   piper-tts:
     image: rhasspy/piper-tts:latest
     container_name: engine-tts
-    ports:
-      - "5500:5500"
     networks:
       - ai-gateway-net
     restart: unless-stopped
 
-  # D. Vector & Embeddings Engine (/v1/embeddings/generate)
   tei-embeddings:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
     container_name: engine-vector-embeddings
-    ports:
-      - "8001:80"
     command: ["--model-id", "BAAI/bge-small-en-v1.5"]
     networks:
       - ai-gateway-net
     restart: unless-stopped
 
-  # E. Re-Ranking Engine (/v1/rerank)
   tei-rerank:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
     container_name: engine-rerank
-    ports:
-      - "8002:80"
     command: ["--model-id", "BAAI/bge-reranker-large"]
     networks:
       - ai-gateway-net
     restart: unless-stopped
 
-  # F. Vision & OCR Engine (/v1/vision/ocr)
-  paddle-ocr:
-    image: paddlepaddle/paddleocr:latest-cpu
+  tesseract-ocr:
+    image: roniemartinez/tesseract-ocr-api:latest
     container_name: engine-vision-ocr
-    ports:
-      - "8003:8080"
     networks:
       - ai-gateway-net
     restart: unless-stopped
@@ -190,25 +167,11 @@ services:
     image: postgres:15-alpine
     container_name: controlplane-db
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-litellm}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-litellm_pass}
-      - POSTGRES_DB=${POSTGRES_DB:-litellm_db}
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=litellm_pass
+      - POSTGRES_DB=litellm_db
     volumes:
       - langfuse_postgres_data:/var/lib/postgresql/data
     networks:
       - ai-gateway-net
-    restart: unless-stopped
-
-  # Documentazione API Interattiva (Scalar UI)
-  scalar-docs:
-    image: scalarapi/scalar:latest
-    container_name: gateway-docs-scalar
-    ports:
-      - "7000:8080"
-    environment:
-      - SCALAR_SPEC_URL=http://orchestrator:8080/openapi.json
-    networks:
-      - ai-gateway-net
-    depends_on:
-      - orchestrator
     restart: unless-stopped
