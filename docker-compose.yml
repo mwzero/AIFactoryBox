@@ -28,7 +28,8 @@ services:
       - TEI_URL=http://engine-vector-embeddings:80/embed
       - RERANK_URL=http://engine-rerank:80/rerank
       - TTS_URL=http://engine-tts:5500/api/tts
-      - GUARDRAIL_URL=http://pii-guardrails:8000/v1/security/guardrail
+      - GUARDRAIL_URL=http://pii-guardrails:8000/v1/chat/completions
+      - OCR_URL=http://engine-vision-ocr:8080/ocr
     networks:
       - ai-gateway-net
     depends_on:
@@ -52,7 +53,7 @@ services:
       - "3000:8080"
     environment:
       - OPENAI_API_BASE_URL=http://litellm-proxy:4000/v1
-      - OPENAI_API_KEY=sk-enterprise-gateway-key
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY:-sk-enterprise-gateway-key}
     volumes:
       - openwebui_data:/app/backend/data
     networks:
@@ -68,8 +69,9 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - LITELLM_MASTER_KEY=sk-master-key-change-me
-      - DATABASE_URL=postgresql://litellm:litellm_pass@postgres-audit:5432/litellm_db
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-master-key-change-me}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD:-litellm_pass}@postgres-audit:5432/${POSTGRES_DB:-litellm_db}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     volumes:
       - ./config/litellm-config.yaml:/app/config.yaml
     command: ["--config", "/app/config.yaml", "--port", "4000"]
@@ -115,7 +117,7 @@ services:
   # 4. PRIMITIVE ENGINES
   # ==========================================
 
-  # A. Document Extraction Engine (/v1/document/to-markdown & /v1/document/extract-tables)
+  # A. Document Extraction Engine (/v1/document/to-markdown)
   docling-service:
     image: quay.io/ds4sd/docling-serve:latest
     container_name: engine-doc-extraction
@@ -171,7 +173,7 @@ services:
       - ai-gateway-net
     restart: unless-stopped
 
-  # F. Vision & OCR Engine (/v1/vision/ocr & /v1/vision/describe)
+  # F. Vision & OCR Engine (/v1/vision/ocr)
   paddle-ocr:
     image: paddlepaddle/paddleocr:latest-cpu
     container_name: engine-vision-ocr
@@ -188,9 +190,9 @@ services:
     image: postgres:15-alpine
     container_name: controlplane-db
     environment:
-      - POSTGRES_USER=litellm
-      - POSTGRES_PASSWORD=litellm_pass
-      - POSTGRES_DB=litellm_db
+      - POSTGRES_USER=${POSTGRES_USER:-litellm}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-litellm_pass}
+      - POSTGRES_DB=${POSTGRES_DB:-litellm_db}
     volumes:
       - langfuse_postgres_data:/var/lib/postgresql/data
     networks:

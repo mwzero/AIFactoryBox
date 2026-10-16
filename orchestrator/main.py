@@ -1,8 +1,12 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import httpx
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("aifactorybox-orchestrator")
 
 app = FastAPI(
     title="AIFactoryBox Orchestrator",
@@ -16,8 +20,6 @@ PRESIDIO_ANALYZER_URL = os.getenv("PRESIDIO_ANALYZER_URL", "http://pii-presidio-
 PRESIDIO_ANONYMIZER_URL = os.getenv("PRESIDIO_ANONYMIZER_URL", "http://pii-presidio-anonymizer:3000/anonymize")
 WHISPER_URL = os.getenv("WHISPER_URL", "http://engine-speech-transcribe:8000/v1/audio/transcriptions")
 TEI_URL = os.getenv("TEI_URL", "http://engine-vector-embeddings:80/embed")
-
-# Nuovi endpoint backend
 RERANK_URL = os.getenv("RERANK_URL", "http://engine-rerank:80/rerank")
 TTS_URL = os.getenv("TTS_URL", "http://engine-tts:5500/api/tts")
 GUARDRAIL_URL = os.getenv("GUARDRAIL_URL", "http://pii-guardrails:8000/v1/chat/completions")
@@ -55,6 +57,29 @@ class GuardrailRequest(BaseModel):
     context: Optional[str] = Field(default=None, example="Istruzioni aziendali e linee guida sulla sicurezza.")
 
 
+# Helper per propagare errori HTTP in modo strutturato
+def handle_downstream_error(service_name: str, e: Exception):
+    if isinstance(e, httpx.TimeoutException):
+        logger.error(f"Timeout calling downstream service {service_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail=f"Downstream service '{service_name}' timed out."
+        )
+    if isinstance(e, httpx.RequestError):
+        logger.error(f"Network error calling downstream service {service_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Unable to reach downstream service '{service_name}': {str(e)}"
+        )
+    if isinstance(e, HTTPException):
+        raise e
+    logger.error(f"Internal error in {service_name}: {e}")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"Error executing primitive '{service_name}': {str(e)}"
+    )
+
+
 # ==========================================
 # PRIMITIVE API ENDPOINTS
 # ==========================================
@@ -78,7 +103,7 @@ async def document_to_markdown(file: UploadFile = File(...)):
             
             return response.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("Docling", e)
 
 
 # 2. Privacy & Anonymization (/v1/privacy/anonymize)
@@ -91,7 +116,7 @@ async def anonymize_text(payload: AnonymizeRequest):
                 json={"text": payload.text, "language": payload.language}
             )
             if analyzer_resp.status_code != 200:
-                raise HTTPException(status_code=analyzer_resp.status_code, detail=analyzer_resp.text)
+                raise HTTPException(status_code=analyzer_resp.status_code, detail=f"Presidio Analyzer Error: {analyzer_resp.text}")
             
             analyzer_results = analyzer_resp.json()
 
@@ -102,11 +127,11 @@ async def anonymize_text(payload: AnonymizeRequest):
             }
             anonymizer_resp = await client.post(PRESIDIO_ANONYMIZER_URL, json=anonymizer_payload)
             if anonymizer_resp.status_code != 200:
-                raise HTTPException(status_code=anonymizer_resp.status_code, detail=anonymizer_resp.text)
+                raise HTTPException(status_code=anonymizer_resp.status_code, detail=f"Presidio Anonymizer Error: {anonymizer_resp.text}")
 
             return anonymizer_resp.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("Presidio", e)
 
 
 # 3. Speech & Audio Transcription (/v1/audio/transcribe)
@@ -128,7 +153,7 @@ async def transcribe_audio(
             
             return response.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("Faster-Whisper", e)
 
 
 # 4. Vector & Embeddings (/v1/embeddings/generate)
@@ -143,12 +168,8 @@ async def generate_embeddings(payload: EmbeddingRequest):
             
             return response.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("TEI Embeddings", e)
 
-
-# ==========================================
-# NUOVE MICRO-PRIMITIVE API
-# ==========================================
 
 # 5. Re-Ranking (/v1/rerank)
 @app.post("/v1/rerank", summary="Ri-ordina i documenti recuperati per pertinenza semantica")
@@ -172,7 +193,7 @@ async def rerank_documents(payload: RerankRequest):
                 
             return {"results": results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("TEI Reranker", e)
 
 
 # 6. Text-to-Speech Synthesis (/v1/audio/synthesize)
@@ -189,14 +210,14 @@ async def synthesize_speech(payload: TTSRequest):
             
             return response.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("Piper TTS", e)
 
 
 # 7. AI Guardrails & Moderation (/v1/security/guardrail)
 @app.post("/v1/security/guardrail", summary="Verifica la sicurezza dei prompt con Llama Guard")
 async def check_guardrail(payload: GuardrailRequest):
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             messages = []
             if payload.context:
                 messages.append({"role": "system", "content": payload.context})
@@ -221,7 +242,7 @@ async def check_guardrail(payload: GuardrailRequest):
                 "raw_output": content
             }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("Llama Guard", e)
 
 
 # 8. Vision & OCR (/v1/vision/ocr)
@@ -238,4 +259,4 @@ async def vision_ocr(file: UploadFile = File(...)):
             
             return response.json()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        handle_downstream_error("PaddleOCR", e)
