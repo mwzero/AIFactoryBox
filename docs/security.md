@@ -1,24 +1,30 @@
-# Security, Privacy & Compliance
+# Privacy and access control
 
-AIFactoryBox is built with a "Zero-Trust Data Boundary" principle for enterprise LLM consumption.
+LiteLLM runs `pii-before-model` as a default pre-call Presidio guardrail.
+The default analyzer language is Italian, with Italian and English small spaCy
+models installed. Explicit MASK entity actions enable the pinned native hook's fail-closed
+handling of HTTP errors and malformed response bodies. Invalid individual
+recognizer entries may still be skipped by the upstream hook.
+Network failures block the call too. Do not disable this guardrail on client keys.
 
-## PII Masking Pipeline (Microsoft Presidio)
+Masking applies to text supported by LiteLLM's native Presidio hook, including
+chat message text. This is not a guarantee of redaction of images, files,
+tool arguments, every API type or every personal datum. Validate detection on
+representative data before sending confidential material externally. No automatic
+de-anonymization is enabled. Masked tokens remain masked in model responses.
+The `/v1/privacy/anonymize` endpoint is independent; calling it is not necessary
+for the chat guardrail to run. It is also not automatically applied to other
+specialized APIs.
 
-Before any unstructured prompt leaves the corporate boundary to public LLMs (e.g. OpenAI, Anthropic), the Presidio Analyzer scans and masks entities:
+Only requests through LiteLLM receive its authentication, quota and budget
+controls. The FastAPI specialized routes have no authentication in this revision.
+Do not expose them publicly without access controls at ingress. The orchestrator
+port is bound only to host loopback for local diagnostics.
 
-1. **Detection**: Recognizes `PERSON`, `EMAIL_ADDRESS`, `PHONE_NUMBER`, `IBAN`, `CREDIT_CARD`, and custom regex patterns.
-2. **Replacement**: Replaces identified tokens with deterministic placeholders (e.g., `<PERSON_1>`, `<EMAIL_1>`).
-3. **De-anonymization (Optional)**: Maps back tokens upon response reception inside the private perimeter.
+Set a random master key and URL-safe database password in `.env`; these are no
+longer embedded in Compose/YAML. Give Open WebUI a generated LiteLLM virtual key,
+not the administrative master key. Configure budgets/limits per virtual key as
+needed; merely running PostgreSQL does not establish an auditing policy.
 
-## Prompt Injection & Content Guardrails (Llama Guard 3)
-
-The `/v1/security/guardrail` primitive evaluates incoming prompts and model responses against safety taxonomy guidelines:
-- Prompt injection and jailbreak attempts (e.g., DAN, system role overriding).
-- Harmful content categories and policy violations.
-- System prompt and secret exfiltration attempts.
-
-## Access Control & Auditing
-
-- **LiteLLM Master Key**: Restricts administrative actions and key issuance.
-- **Tenant API Keys**: Allows scoping rate-limits and token budgets per department or team.
-- **PostgreSQL Audit Log**: Stores request metadata, latency, token consumption, and status codes for compliance audits.
+Presidio is PII detection, not content moderation or prompt-injection protection.
+No Llama Guard service is deployed or advertised.

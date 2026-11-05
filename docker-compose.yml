@@ -1,177 +1,153 @@
 networks:
   ai-gateway-net:
     driver: bridge
-
 volumes:
-  litellm_data:
-  openwebui_data:
-  presidio_data:
-  langfuse_postgres_data:
-
+  openwebui_data: null
+  langfuse_postgres_data: null
 services:
-
-  # ==========================================
-  # REVERSE PROXY, CORS & ROUTING (Nginx)
-  # ==========================================
   nginx:
     image: nginx:alpine
     container_name: ai-gateway-proxy
     ports:
-      - "80:80"
+    - 80:80
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - orchestrator
-      - open-webui
-      - litellm-proxy
+    - orchestrator
+    - open-webui
+    - litellm-proxy
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
-  # ==========================================
-  # 0. API ORCHESTRATOR SERVICE (FastAPI + Scalar)
-  # ==========================================
   orchestrator:
     build:
       context: ./orchestrator
       dockerfile: Dockerfile
     container_name: ai-gateway-orchestrator
     environment:
-      - DOCLING_URL=http://engine-doc-extraction:5000/process
-      - PRESIDIO_ANALYZER_URL=http://pii-presidio-analyzer:3000/analyze
-      - PRESIDIO_ANONYMIZER_URL=http://pii-presidio-anonymizer:3000/anonymize
-      - WHISPER_URL=http://engine-speech-transcribe:8000/v1/audio/transcriptions
-      - TEI_URL=http://engine-vector-embeddings:80/embed
-      - RERANK_URL=http://engine-rerank:80/rerank
-      - TTS_URL=http://engine-tts:5500/api/tts
-      - OCR_URL=http://engine-vision-ocr:8000/tesseract
+    - DOCLING_URL=http://engine-doc-extraction:5000/process
+    - PRESIDIO_ANALYZER_URL=http://pii-presidio-analyzer:3000/analyze
+    - PRESIDIO_ANONYMIZER_URL=http://pii-presidio-anonymizer:3000/anonymize
+    - WHISPER_URL=http://engine-speech-transcribe:8000/v1/audio/transcriptions
+    - TTS_URL=http://engine-tts:5500/api/tts
+    - NO_PROXY=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
+    - no_proxy=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     depends_on:
-      - docling-service
-      - presidio-analyzer
-      - presidio-anonymizer
-      - faster-whisper
-      - tei-embeddings
-      - tei-rerank
-      - piper-tts
-      - tesseract-ocr
+    - docling-service
+    - presidio-analyzer
+    - presidio-anonymizer
+    - faster-whisper
+    - piper-tts
     restart: unless-stopped
-
-  # ==========================================
-  # 1. FRONTEND & PLAYGROUND
-  # ==========================================
+    ports:
+    - 127.0.0.1:8080:8080
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: ai-playground-ui
     environment:
-      - OPENAI_API_BASE_URL=http://litellm-proxy:4000/v1
-      - OPENAI_API_KEY=sk-enterprise-gateway-key
-      - PORT=8080
+    - OPENAI_API_BASE_URL=http://litellm-proxy:4000/v1
+    - OPENAI_API_KEY=${WEBUI_LITELLM_API_KEY:?Set a LiteLLM virtual key for Open WebUI}
+    - PORT=8080
+    - NO_PROXY=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
+    - no_proxy=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
     volumes:
-      - openwebui_data:/app/backend/data
+    - openwebui_data:/app/backend/data
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
-  # ==========================================
-  # 2. CORE GATEWAY & ROUTER (LiteLLM)
-  # ==========================================
   litellm-proxy:
-    image: ghcr.io/berriai/litellm:main-v1.35.0
+    image: ghcr.io/berriai/litellm:main-v1.83.14-stable
     container_name: ai-gateway-core
     environment:
-      - LITELLM_MASTER_KEY=sk-master-key-change-me
-      - DATABASE_URL=postgresql://litellm:litellm_pass@postgres-audit:5432/litellm_db
+    - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY}
+    - DATABASE_URL=postgresql://litellm:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres-audit:5432/litellm_db
+    - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    - NO_PROXY=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
+    - no_proxy=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
     volumes:
-      - ./config/litellm-config.yaml:/app/config.yaml
-    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    - ./config/litellm-config.yaml:/app/config.yaml:ro
+    command:
+    - --config
+    - /app/config.yaml
+    - --port
+    - '4000'
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     depends_on:
-      - postgres-audit
+    - postgres-audit
+    - presidio-analyzer
+    - presidio-anonymizer
+    - tei-embeddings
+    - tei-rerank
     restart: unless-stopped
-
-  # ==========================================
-  # 3. PRIVACY & PII MASKING
-  # ==========================================
   presidio-analyzer:
-    image: mcr.microsoft.com/presidio-analyzer:latest
     container_name: pii-presidio-analyzer
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
+    build:
+      context: ./presidio
+    environment:
+    - NLP_CONF_FILE=/app/conf/nlp.yaml
+    - ANALYZER_CONF_FILE=/app/conf/analyzer.yaml
   presidio-anonymizer:
-    image: mcr.microsoft.com/presidio-anonymizer:latest
+    image: mcr.microsoft.com/presidio-anonymizer:2.2.360
     container_name: pii-presidio-anonymizer
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
-  # ==========================================
-  # 4. PRIMITIVE ENGINES (CPU STABLE)
-  # ==========================================
   docling-service:
     image: quay.io/ds4sd/docling-serve:cpu
     container_name: engine-doc-extraction
     environment:
-      - OMP_NUM_THREADS=4
+    - OMP_NUM_THREADS=4
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
   faster-whisper:
-    image: fedirz/faster-whisper-server:latest-cpu
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
     container_name: engine-speech-transcribe
     environment:
-      - WHISPER_MODEL=small
+    - WHISPER__INFERENCE_DEVICE=cpu
+    - WHISPER__COMPUTE_TYPE=int8
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
   piper-tts:
     image: rhasspy/piper-tts:latest
     container_name: engine-tts
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
   tei-embeddings:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
     container_name: engine-vector-embeddings
-    command: ["--model-id", "BAAI/bge-small-en-v1.5"]
+    command:
+    - --model-id
+    - BAAI/bge-small-en-v1.5
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
   tei-rerank:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.5
     container_name: engine-rerank
-    command: ["--model-id", "BAAI/bge-reranker-large"]
+    command:
+    - --model-id
+    - cross-encoder/ms-marco-MiniLM-L-6-v2
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped
-
-  tesseract-ocr:
-    image: roniemartinez/tesseract-ocr-api:latest
-    container_name: engine-vision-ocr
-    networks:
-      - ai-gateway-net
-    restart: unless-stopped
-
-  # ==========================================
-  # 5. CONTROL PLANE & OBSERVABILITY
-  # ==========================================
   postgres-audit:
     image: postgres:15-alpine
     container_name: controlplane-db
     environment:
-      - POSTGRES_USER=litellm
-      - POSTGRES_PASSWORD=litellm_pass
-      - POSTGRES_DB=litellm_db
+    - POSTGRES_USER=litellm
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    - POSTGRES_DB=litellm_db
     volumes:
-      - langfuse_postgres_data:/var/lib/postgresql/data
+    - langfuse_postgres_data:/var/lib/postgresql/data
     networks:
-      - ai-gateway-net
+    - ai-gateway-net
     restart: unless-stopped

@@ -1,0 +1,6 @@
+pytest>=8
+flake8>=7
+mkdocs-material>=9
+litellm==1.83.14
+aiohttp>=3.10
+Pillow>=10

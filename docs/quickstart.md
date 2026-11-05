@@ -1,41 +1,43 @@
-# Quickstart & Deployment Guide
+# Quickstart
 
-Deploy AIFactoryBox in minutes using Docker Compose.
+Requires Docker >=24, Compose >=2.20, at least 4 CPU / 8 GB RAM. The default
+stack still includes Docling and Open WebUI; small inference models do not make
+the entire stack small. Model downloads need access to Hugging Face and its
+artifact destinations; image/build downloads need the registries, PyPI, Debian
+and GitHub. Keep TLS verification enabled and provide proxy CA trust where needed.
 
-## Prerequisites
-
-- **Docker Engine**: `>= 24.0`
-- **Docker Compose**: `>= 2.20`
-- Minimum Hardware: 4 vCPU, 8 GB RAM (16 GB recommended for full local model execution).
-
-## Step-by-Step Installation
-
-### 1. Clone Repository & Setup Environment
 ```bash
-git clone https://github.com/mwzero/AIFactoryBox.git
-cd AIFactoryBox
 cp .env.example .env
-```
-Edit `.env` to configure your passwords and API keys:
-```env
-LITELLM_MASTER_KEY=sk-prod-your-secure-key
-POSTGRES_PASSWORD=your_secure_db_password
-OPENAI_API_KEY=sk-your-openai-key-optional
-```
-
-### 2. Start Services
-```bash
+# Edit .env: random LITELLM_MASTER_KEY, URL-safe POSTGRES_PASSWORD;
+# OPENAI_API_KEY is optional unless using chat-small.
+# Leave a nonempty WEBUI_LITELLM_API_KEY placeholder until generating a key.
 docker compose up -d --build
+curl --fail http://localhost/health
 ```
 
-### 3. Verify Health Check
+Generate a LiteLLM virtual key using the administrative key from a trusted local
+client. To access its management API without publishing another port:
+
 ```bash
-curl http://localhost:8080/health
-# Response: {"status":"ok","service":"AIFactoryBox Orchestrator","version":"1.1.0"}
+docker compose exec litellm-proxy python -c 'import os, urllib.request; r=urllib.request.Request("http://127.0.0.1:4000/key/generate", data=b"{}", headers={"Authorization": "Bearer " + os.environ["LITELLM_MASTER_KEY"], "Content-Type": "application/json"}); print(urllib.request.urlopen(r).read().decode())'
 ```
 
-### 4. Access Interfaces
-- **Interactive Documentation (Scalar)**: [http://localhost:7000](http://localhost:7000)
-- **Conversational Playground (Open WebUI)**: [http://localhost:3000](http://localhost:3000)
-- **FastAPI OpenAPI Schema**: [http://localhost:8080/openapi.json](http://localhost:8080/openapi.json)
-- **LiteLLM Admin & Proxy**: [http://localhost:4000](http://localhost:4000)
+Treat the returned key as a secret. Save it as `WEBUI_LITELLM_API_KEY` in `.env`
+and run `docker compose up -d open-webui`. Clients use that virtual key as their
+bearer token for `/v1/chat/completions`, `/v1/embeddings` and `/rerank`.
+Open WebUI is at the gateway root; specialized API docs are at `/docs`.
+
+Verify actual chat masking with non-sensitive test data and inspect a controlled
+provider before production use. `/health` checks only FastAPI; it does not prove
+that LiteLLM, Presidio or inference models are ready. First startup downloads
+models and can take several minutes.
+
+See [Architecture](architecture.md) for model choices and breaking API changes.
+
+## Builds behind a TLS-inspecting proxy
+
+The two local Dockerfiles accept an optional BuildKit `proxy_ca` secret.
+For example, build the orchestrator with
+`docker build --secret id=proxy_ca,src=/path/to/combined-ca.pem -t aifactorybox-orchestrator ./orchestrator`.
+Supply the same secret to the Presidio build. Mount the CA rather than disabling
+TLS verification or copying a session certificate into image layers.
