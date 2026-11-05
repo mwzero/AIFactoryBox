@@ -1,8 +1,13 @@
 {
+  "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/(v1/.*|health|docs|openapi.json)",
       "destination": "/api/index.py"
+    },
+    {
+      "source": "/",
+      "destination": "/website/index.html"
     },
     {
       "source": "/(.*)",
