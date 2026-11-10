@@ -1,37 +1,79 @@
 # Privacy and access control
 
-LiteLLM runs `pii-before-model` as a default pre-call Presidio guardrail.
-The default analyzer language is Italian, with Italian and English small spaCy
-models installed. Explicit MASK entity actions enable the pinned native hook's fail-closed
-handling of HTTP errors and malformed response bodies. Invalid individual
-recognizer entries may still be skipped by the upstream hook.
-Network failures block the call too. Do not disable this guardrail on client keys.
+## Chat data before an external model call
 
-Masking applies to text supported by LiteLLM's native Presidio hook, including
-chat message text. This is not a guarantee of redaction of images, files,
-tool arguments, every API type or every personal datum. Validate detection on
-representative data before sending confidential material externally. No automatic
-de-anonymization is enabled. Masked tokens remain masked in model responses.
-The `/v1/privacy/anonymize` endpoint is independent; calling it is not necessary
-for the chat guardrail to run. It is also not automatically applied to other
-specialized APIs.
+The configured `pii-before-model` guardrail uses Presidio with `mode: pre_call`
+and `default_on: true`. For supported chat message text, the intended path is:
 
-All published APIs are routed through LiteLLM. Community pass-through routes
-use `auth: false` internally because their native authentication requires
-Enterprise in the pinned release. Nginx protects specialized routes using an
-internal authentication subrequest to LiteLLM `/v1/models`; missing or rejected
-keys cannot reach the pass-through. Neither LiteLLM nor FastAPI publishes a host
-port in Compose. Do not expose those internal ports or bypass Nginx.
+```text
+Client / Open WebUI → LiteLLM → Presidio analyzer → Presidio anonymizer
+                          ↑                         │
+                          └──── masked text ────────┘
+                          ↓
+                    Model provider → response to client
+```
 
-The ingress check validates a key, not fine-grained access to specialized APIs.
-It does not provide model-style token budgeting or per-user accounting for
-pass-through operations. Any key accepted by `/v1/models` can use them. Do not
-assume chat guardrails inspect specialized payloads or multipart uploads.
+LiteLLM forwards the masked message after the pre-call guardrail completes.
+The configured entity actions are `PERSON`, `EMAIL_ADDRESS`, `PHONE_NUMBER`,
+`CREDIT_CARD` and `IBAN_CODE`, all `MASK`. The default analyzer language is
+Italian; Italian and English small spaCy models are installed. English model
+installation does not enable automatic language detection.
 
-Set a random master key and URL-safe database password in `.env`; these are no
-longer embedded in Compose/YAML. Give Open WebUI a generated LiteLLM virtual key,
-not the administrative master key. Configure budgets/limits per virtual key as
-needed; merely running PostgreSQL does not establish an auditing policy.
+Explicit MASK actions enable the pinned native hook's failure handling for
+HTTP errors and malformed response bodies. Network failures also block the
+call. However, upstream can skip invalid individual recognizer entries and
+PII detection can miss entities. There is no guarantee that every sensitive
+value is removed. Do not disable guardrails on client keys to work around errors.
 
-Presidio is PII detection, not content moderation or prompt-injection protection.
-No Llama Guard service is deployed or advertised.
+The configuration does not automatically restore original PII in the model's
+answer (`output_parse_pii: false`). Images, attachments, tool arguments, arbitrary
+JSON and other API types are not covered merely because a chat guardrail is
+configured. Presidio is not content moderation or prompt-injection protection;
+there is no Llama Guard service in this stack.
+
+The standalone `/v1/privacy/anonymize` API is independent. It explicitly invokes
+Presidio through FastAPI; chat protection does not require clients to call it.
+It does not automatically protect the other specialized APIs.
+
+## Community pass-through boundary
+
+All published API paths reach LiteLLM, but the pinned LiteLLM Community release
+requires Enterprise for native pass-through `auth: true`. The configured
+specialized pass-through routes therefore use `auth: false` **inside the private
+network**. Nginx validates their bearer key through an internal LiteLLM
+`/v1/models` subrequest before forwarding the operation.
+
+Missing or rejected keys are blocked. An unavailable authentication service must
+fail closed at ingress. The internal authentication locations cannot be invoked
+as public routes. Compose publishes only Nginx port 80; exposing LiteLLM or
+FastAPI directly would bypass this specialized-key check.
+
+Any key accepted by `/v1/models` can invoke the specialized APIs. This is not
+per-endpoint authorization, model-style token budgeting or per-user pass-through
+accounting. Model-key restrictions do not imply equivalent specialized-route
+restrictions. Pass-through guardrails are opt-in and are not configured here.
+The client bearer header is not forwarded to FastAPI by the pass-through.
+
+## Credentials, logs and deployment
+
+- Store real credentials in local `.env` or a deployment secret store, never tracked files.
+- Use a random `LITELLM_MASTER_KEY` for administration and generated virtual keys for WebUI/clients.
+- Configure model access, limits, budgets and retention explicitly. Merely running PostgreSQL does not establish an auditing or data-retention policy.
+- Treat key-generation output and request/response logs as sensitive. Do not enable verbose body logging with real confidential data.
+- Nginx currently listens on HTTP port 80. Add an HTTPS termination layer before sending bearer credentials over an untrusted network.
+- Keep registry signatures, checksums and TLS verification enabled. Configure trusted CAs separately for builds and runtime downloads.
+
+The Vercel adapter imports FastAPI directly and does not inherit Compose's
+authentication or PII boundary. Do not treat that deployment as the protected gateway.
+
+## Evidence and remaining validation
+
+The tests exercise the real LiteLLM guardrail with simulated Presidio services,
+including masking and rejection on tested analyzer/anonymizer failures. Ingress
+key checks, multipart forwarding and error handling have also been tested.
+These checks do not establish real Italian NER accuracy or provider-side privacy.
+
+Before confidential use, verify the real analyzer/anonymizer and a controlled
+provider with representative synthetic data, including streaming, any tools or
+attachments you intend to support, and failure cases. Full-stack validation
+remains outstanding; see [Development](development.md#validation-status).

@@ -9,7 +9,7 @@ authentication is enforced at Nginx via LiteLLM /v1/models; this is key validati
 not specialized-route permissions, PII processing or model budgets. See docs/security.md.
 
 Prefer small CPU models and document language/quality tradeoffs. Current defaults
-and API migration are in docs/architecture.md. Tesseract is local to the
+are in docs/models.md; API migration is in docs/architecture.md. Tesseract is local to the
 orchestrator container with Italian and English data. No generative vision or
 Llama Guard service is configured. Never claim moderation or complete PII removal.
 
@@ -18,3 +18,8 @@ MkDocs build. Guardrail tests use local Presidio doubles and the actual pinned
 LiteLLM implementation; model-adapter tests use TEI-compatible doubles. Exercise
 real OCR when Tesseract is installed. These do not establish full inference-stack
 readiness. Preserve TLS and artifact verification during builds.
+
+Documentation: preserve the distinction between implemented behavior, tested
+adapters and planned profiles. The README/MkDocs architecture diagram is
+docs/assets/gateway-architecture.svg; website/index.html embeds the same SVG.
+Keep those diagrams aligned. The static site is not a live gateway playground.
