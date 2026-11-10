@@ -1,0 +1,2 @@
+# Use the same proxy version as the full gateway.
+litellm[proxy]==1.83.14

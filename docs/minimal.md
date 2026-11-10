@@ -1,0 +1,1 @@
+--8<-- "minimal/README.md"

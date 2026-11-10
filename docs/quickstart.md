@@ -1,7 +1,6 @@
 # Quickstart
 
-This starts the existing full Compose stack. It is not the proposed minimal
-LiteLLM + Ollama profile. Full-stack inference is not yet validated end to end;
+This starts the existing full Compose stack. For the separate LiteLLM + Ollama variant, use the [minimal guide](minimal.md). Full-stack inference is not yet validated end to end;
 see [validation status and known limits](development.md#validation-status).
 
 ## Prerequisites

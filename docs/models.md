@@ -1,6 +1,6 @@
 # Current model inventory
 
-These are the defaults currently committed, not final recommendations or a
+These are the full-stack defaults currently committed, not final recommendations or a
 benchmark ranking. Model selection remains under review, especially for Italian
 retrieval. Changing a model also requires verifying runtime compatibility,
 resource use, license, download access and representative task quality.
@@ -31,13 +31,14 @@ classification and some extraction from text, with quality measured per task.
 Generative reranking via prompts has a different performance and API contract
 from a dedicated reranker. LLM-based redaction is not equivalent to reliable PII protection.
 
-## Proposed profiles — not implemented
+## Minimal variant and proposed profiles
 
-- **Minimal:** LiteLLM + Ollama + one small text model, with persistent model storage; no PostgreSQL or FastAPI unless the workflow needs them.
+- **Minimal (implemented, real-model validation pending):** [LiteLLM + Ollama/Gemma](minimal.md), with native Python and Docker modes; no PostgreSQL or FastAPI.
 - **Minimal plus:** add only dedicated small engines required for OCR, embeddings or audio.
 - **GPU / hybrid:** select compatible runtimes and hardware resources, optionally using cloud providers for selected tasks.
 
 A future catalog could describe task, language, runtime, model revision,
 quantization, license and estimated resources. A management console could
 check resources, download weights, start a runtime, test it and then activate a
-LiteLLM alias. No such catalog, console or profile is shipped in this branch.
+LiteLLM alias. The minimal variant is available separately. No catalog, console, minimal-plus
+or GPU profile is shipped in this branch.

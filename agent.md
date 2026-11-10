@@ -23,3 +23,8 @@ Documentation: preserve the distinction between implemented behavior, tested
 adapters and planned profiles. The README/MkDocs architecture diagram is
 docs/assets/gateway-architecture.svg; website/index.html embeds the same SVG.
 Keep those diagrams aligned. The static site is not a live gateway playground.
+
+The minimal/ variant is independent of the full stack. Keep it database-free
+and text-only, with no guardrail claims. Its launcher starts the standard LiteLLM
+proxy and must refuse missing credentials. See minimal/README.md for modes and
+known real-model validation limits.

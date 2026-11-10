@@ -33,12 +33,19 @@ jobs:
       - name: Test Nginx Ingress
         run: RUN_DOCKER_TESTS=1 pytest tests/test_ingress.py -q
 
+      - name: Validate Minimal Compose
+        env:
+          LITELLM_MASTER_KEY: sk-compose-validation-key-long-enough
+        run: |
+          docker compose -f minimal/compose.yaml config --quiet
+          docker compose -f minimal/compose.yaml -f minimal/compose.python.yaml config --quiet
+
       - name: Lint Code with Flake8
         run: |
           # Interrompe la build se ci sono errori di sintassi o variabili non definite
-          flake8 orchestrator/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 orchestrator/ minimal/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # Warning non bloccanti per lo stile del codice
-          flake8 orchestrator/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          flake8 orchestrator/ minimal/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
   build-and-deploy-check:
     name: 🐳 Docker Compose & Deployment Verification

@@ -77,8 +77,8 @@ Presidio guardrail, service containers, or the Tesseract executable. Its
 `/health` response is FastAPI health, not Compose gateway health. It is not an
 alternative deployment of the complete gateway.
 
-The static website is documentation, not a live API playground. Minimal CPU/GPU
-profiles, Ollama/Gemma and a model-management console remain proposed work.
+The static website is documentation, not a live API playground. The separate [minimal variant](minimal.md) uses LiteLLM and Ollama/Gemma, with
+real-model validation pending. GPU profiles and a model-management console remain proposed work.
 
 ## Migration from the original orchestrator
 
