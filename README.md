@@ -15,6 +15,7 @@ specialized operations. Read the [security boundaries](docs/security.md).
 
 ## Start here
 
+- [Minimal local gateway](minimal/README.md): LiteLLM in Python or Docker, Ollama and Gemma 3 1B, without a database.
 - [Quickstart](docs/quickstart.md): configure credentials, start Compose, create a key and check services.
 - [Architecture](docs/architecture.md): request paths, component responsibilities and runtime/model distinction.
 - [API guide](docs/apis.md): authenticated examples and contract changes.
@@ -22,8 +23,9 @@ specialized operations. Read the [security boundaries](docs/security.md).
 - [Development and validation](docs/development.md): local setup, tests and what has actually been verified.
 
 The current Compose stack includes PostgreSQL, Open WebUI and specialized engines.
-It is not the proposed two-container LiteLLM + Ollama profile. No Ollama/Gemma
-profile or model-management console is implemented yet.
+The independent `minimal/` variant provides LiteLLM + Ollama/Gemma without those
+services. Its real-model validation remains pending; no model-management console
+is implemented.
 
 The static `website/` page describes the project. The Compose gateway serves
 Open WebUI at `/`; neither the static site nor the Vercel adapter deploys the

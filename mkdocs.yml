@@ -45,6 +45,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Architecture: architecture.md
+  - Minimal Local Gateway: minimal.md
   - APIs: apis.md
   - Models & Planned Profiles: models.md
   - Deployment & Quickstart: quickstart.md

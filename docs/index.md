@@ -17,6 +17,7 @@ local OCR functionality that the model gateway does not supply.
 5. [Models](models.md): inspect the actual defaults and their tradeoffs.
 6. [Development](development.md): run checks and distinguish test evidence from full-stack readiness.
 
-The current implementation targets a Docker Compose deployment. A minimal
-LiteLLM + Ollama installation, hardware profiles, model catalog and management
-console are design directions, not available features.
+The full gateway targets Docker Compose. The separate [minimal variant](minimal.md)
+provides LiteLLM in Python or Docker with Ollama/Gemma, without a database.
+Real-model validation of that variant remains pending. Hardware profiles, a model
+catalog and management console remain design directions.

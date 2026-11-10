@@ -93,4 +93,4 @@ from a running container, registered API schema or FastAPI health response.
 - Small inference models do not guarantee a small complete stack or small images.
 - Only Tesseract OCR has a specialized 20 MiB check; Nginx's 100M request limit is a separate ingress limit.
 - Presidio's current integration is text PII masking, not comprehensive DLP or prompt safety.
-- No minimal profile, Ollama/Gemma runtime, hardware selector, model catalog or management console is implemented.
+- The separate [minimal variant](minimal.md) provides Python/Docker launch configurations for Ollama/Gemma; real-model inference remains unverified. No hardware selector, model catalog or management console is implemented.

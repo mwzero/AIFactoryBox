@@ -105,7 +105,7 @@ th,td{padding:12px 8px}}
 <text x="590" y="615" class="small">Community ingress validates specialized API keys through LiteLLM /v1/models.</text>
 <text x="590" y="645" class="small">Pass-through does not automatically inherit chat PII masking, token budgets or per-route permissions.</text>
 <text x="590" y="681" class="small">Only Nginx publishes a host port; cloud providers are external.</text>
-</svg><figcaption>Solid arrows show request paths. Dashed arrows show chat masking and persistent gateway state. The diagram describes the current stack, not the proposed minimal profile.</figcaption>
+</svg><figcaption>Solid arrows show request paths. Dashed arrows show chat masking and persistent gateway state. The diagram describes the current stack, not the separate minimal variant.</figcaption>
 </figure>
 <div class="cards">
 <article class="card">
@@ -210,7 +210,7 @@ th,td{padding:12px 8px}}
 </div>
 <div>
 <p>A container packages an inference runtime; that runtime loads model weights. Docker does not remove RAM, disk or GPU requirements.</p>
-<p>A minimal LiteLLM + Ollama profile, Gemma integration, hardware profiles, a model catalog and a download console are proposed work. They are not available deployment options yet.</p>
+<p>The separate minimal variant provides LiteLLM in Python or Docker with Ollama and Gemma 3 1B; real-model validation remains pending. Hardware profiles, a model catalog and a download console remain proposed work. See the <a href="https://mwzero.github.io/AIFactoryBox/minimal/">minimal guide</a>.</p>
 </div>
 </div>
 </section>
