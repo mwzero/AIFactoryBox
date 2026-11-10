@@ -30,6 +30,9 @@ jobs:
       - name: Test Gateway
         run: pytest -q
 
+      - name: Test Nginx Ingress
+        run: RUN_DOCKER_TESTS=1 pytest tests/test_ingress.py -q
+
       - name: Lint Code with Flake8
         run: |
           # Interrompe la build se ci sono errori di sintassi o variabili non definite
@@ -73,7 +76,7 @@ jobs:
       - name: Verify Orchestrator Healthcheck Endpoint
         run: |
           # Verifica che l'orchestratore risponda HTTP 200 sull'endpoint /health
-          curl --fail --retry 5 --retry-delay 3 http://localhost:8080/health || exit 1
+          docker compose --env-file .env.example exec -T orchestrator python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"
 
       - name: Cleanup Containers
         if: always()

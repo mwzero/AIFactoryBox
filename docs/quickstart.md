@@ -25,11 +25,16 @@ docker compose exec litellm-proxy python -c 'import os, urllib.request; r=urllib
 Treat the returned key as a secret. Save it as `WEBUI_LITELLM_API_KEY` in `.env`
 and run `docker compose up -d open-webui`. Clients use that virtual key as their
 bearer token for `/v1/chat/completions`, `/v1/embeddings` and `/rerank`.
-Open WebUI is at the gateway root; specialized API docs are at `/docs`.
+Open WebUI is at the gateway root; model API docs are at `/docs`; specialized schemas are available at
+`/specialized/openapi.json` with a bearer key.
+
+All specialized API calls also require that bearer key at the Nginx ingress.
+Their paths are forwarded through LiteLLM to internal FastAPI; see
+[access-control limitations](security.md).
 
 Verify actual chat masking with non-sensitive test data and inspect a controlled
-provider before production use. `/health` checks only FastAPI; it does not prove
-that LiteLLM, Presidio or inference models are ready. First startup downloads
+provider before production use. `/health` checks only LiteLLM liveness; it does not prove
+that FastAPI, Presidio or inference models are ready. First startup downloads
 models and can take several minutes.
 
 See [Architecture](architecture.md) for model choices and breaking API changes.

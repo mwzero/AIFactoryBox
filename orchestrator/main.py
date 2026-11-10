@@ -34,7 +34,7 @@ TTS_URL = os.getenv("TTS_URL", "http://engine-tts:5500/api/tts")
 @app.get("/docs", include_in_schema=False)
 async def scalar_docs():
     return get_scalar_api_reference(
-        openapi_url=app.openapi_url,
+        openapi_url=os.getenv("SCALAR_OPENAPI_URL", app.openapi_url),
         title=app.title,
     )
 

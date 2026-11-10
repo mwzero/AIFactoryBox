@@ -13,7 +13,6 @@ services:
     volumes:
     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-    - orchestrator
     - open-webui
     - litellm-proxy
     networks:
@@ -32,6 +31,7 @@ services:
     - TTS_URL=http://engine-tts:5500/api/tts
     - NO_PROXY=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
     - no_proxy=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
+    - SCALAR_OPENAPI_URL=/specialized/openapi.json
     networks:
     - ai-gateway-net
     depends_on:
@@ -41,8 +41,6 @@ services:
     - faster-whisper
     - piper-tts
     restart: unless-stopped
-    ports:
-    - 127.0.0.1:8080:8080
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: ai-playground-ui
@@ -81,6 +79,7 @@ services:
     - presidio-anonymizer
     - tei-embeddings
     - tei-rerank
+    - orchestrator
     restart: unless-stopped
   presidio-analyzer:
     container_name: pii-presidio-analyzer

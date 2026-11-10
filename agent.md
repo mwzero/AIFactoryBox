@@ -3,8 +3,10 @@
 Use the existing checkout. LiteLLM Proxy owns model APIs, authentication,
 budgets and configured Presidio text masking. FastAPI contains only specialized
 document, standalone privacy, audio and OCR adapters. Do not duplicate supported
-model APIs in Python. Nginx provides the shared ingress; specialized routes do
-not automatically receive LiteLLM controls.
+model APIs in Python. All public APIs go through LiteLLM; specialized APIs use
+native pass-through. Keep LiteLLM and FastAPI private. Community pass-through
+authentication is enforced at Nginx via LiteLLM /v1/models; this is key validation,
+not specialized-route permissions, PII processing or model budgets. See docs/security.md.
 
 Prefer small CPU models and document language/quality tradeoffs. Current defaults
 and API migration are in docs/architecture.md. Tesseract is local to the

@@ -12,8 +12,10 @@
 | `/v1/audio/synthesize` | FastAPI | `text`, optional `voice` |
 | `/v1/vision/ocr` | FastAPI | Multipart `file`; query `language=ita+eng`; max 20 MiB |
 
-Model APIs require a LiteLLM bearer key. Specialized APIs require deployment
-access controls; they do not pass through LiteLLM. Full payload schemas for the
-specialized APIs are at `/openapi.json` and `/docs`.
+All public API operations require a LiteLLM bearer key. Specialized APIs pass
+through LiteLLM after ingress key validation; model-specific guardrails and
+budgets are not automatically applied. Specialized schemas are at
+`/specialized/openapi.json` and `/specialized/docs` (bearer authentication required).
+Errors preserve the upstream status but use LiteLLM's error envelope.
 
 See [API migration and model tradeoffs](architecture.md).

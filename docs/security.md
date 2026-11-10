@@ -16,10 +16,17 @@ The `/v1/privacy/anonymize` endpoint is independent; calling it is not necessary
 for the chat guardrail to run. It is also not automatically applied to other
 specialized APIs.
 
-Only requests through LiteLLM receive its authentication, quota and budget
-controls. The FastAPI specialized routes have no authentication in this revision.
-Do not expose them publicly without access controls at ingress. The orchestrator
-port is bound only to host loopback for local diagnostics.
+All published APIs are routed through LiteLLM. Community pass-through routes
+use `auth: false` internally because their native authentication requires
+Enterprise in the pinned release. Nginx protects specialized routes using an
+internal authentication subrequest to LiteLLM `/v1/models`; missing or rejected
+keys cannot reach the pass-through. Neither LiteLLM nor FastAPI publishes a host
+port in Compose. Do not expose those internal ports or bypass Nginx.
+
+The ingress check validates a key, not fine-grained access to specialized APIs.
+It does not provide model-style token budgeting or per-user accounting for
+pass-through operations. Any key accepted by `/v1/models` can use them. Do not
+assume chat guardrails inspect specialized payloads or multipart uploads.
 
 Set a random master key and URL-safe database password in `.env`; these are no
 longer embedded in Compose/YAML. Give Open WebUI a generated LiteLLM virtual key,

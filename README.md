@@ -1,8 +1,10 @@
 # AIFactoryBox
 
 A gateway composed of LiteLLM Proxy and a small FastAPI service for specialized
-APIs. Model calls go through LiteLLM; documents, standalone anonymization,
-audio and OCR use FastAPI. Nginx exposes one entry point.
+APIs. All API requests go through LiteLLM; native pass-through forwards documents,
+standalone anonymization, audio and OCR to internal FastAPI. Nginx exposes one
+entry point and validates specialized API keys through LiteLLM. See the
+[authentication limits](docs/security.md) of Community pass-through.
 
 See [Quickstart](docs/quickstart.md), [Architecture and small-model choices](docs/architecture.md),
 [API migration](docs/apis.md), and [PII controls](docs/security.md).

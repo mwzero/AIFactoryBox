@@ -1,17 +1,32 @@
 # Gateway architecture
 
 ```text
-Clients / Open WebUI → Nginx → LiteLLM → Presidio → model provider
-                          └→ FastAPI → document / audio services
-                                    └→ local Tesseract OCR
+Clients → Nginx → LiteLLM ┬→ local runtimes / cloud providers
+                         └→ native pass-through → FastAPI → specialized services
+Open WebUI ─────→ LiteLLM
 ```
 
-LiteLLM owns `/v1/chat/completions`, `/v1/embeddings`, `/v1/models` and
-`/rerank` (also `/v1/rerank`). It applies its authentication, budgets and
-configured guardrails. Python no longer duplicates embedding or reranking
-adapters. The standalone document, privacy, audio and OCR endpoints retain
-their existing URLs. They do **not** inherit LiteLLM authentication, quotas or
-PII protection. Restrict public access to these routes at deployment ingress.
+LiteLLM owns model APIs and forwards the specialized document, privacy, audio
+and OCR APIs to FastAPI. Those APIs retain their URLs and payloads. No FastAPI
+port is published by Compose and Nginx has no direct FastAPI upstream.
+
+In the pinned Community version, native pass-through authentication requires
+Enterprise. The public Nginx ingress therefore validates bearer keys via
+LiteLLM `/v1/models` before forwarding specialized requests to LiteLLM. Keep
+LiteLLM and FastAPI private: pass-through routes use `auth: false` internally.
+This check validates the key, not specialized endpoint permissions, token
+budgets or per-user pass-through accounting. Any key accepted by that check
+can invoke specialized APIs. Native model routes retain their own controls.
+
+Pass-through guardrails are opt-in; the chat PII guardrail does not automatically
+redact arbitrary JSON or uploaded files. Upstream error statuses are preserved,
+but error bodies use LiteLLM's error envelope. No wildcard upstream URLs are exposed.
+
+`/docs` and `/openapi.json` now belong to LiteLLM. The specialized schema, docs
+and health are available through authenticated `/specialized/openapi.json`,
+`/specialized/docs` and `/specialized/health`. `/health` checks LiteLLM liveness,
+not the readiness of every backend. Use a bearer-capable client to retrieve
+specialized documentation; a plain browser navigation supplies no bearer key.
 
 ## Small defaults
 
@@ -39,8 +54,8 @@ result is now defined rather than depending on an undocumented external API.
   `{"model":"rerank-small","query":"returns","documents":["Returns within 30 days"],"top_n":1}`.
   The response has `results[].relevance_score` and standard LiteLLM metadata.
 - `/v1/security/guardrail` is removed: its backend never existed in Compose.
-- FastAPI `/openapi.json` and `/docs` describe only specialized endpoints.
-  LiteLLM's internal `/openapi.json` and `/docs` describe model endpoints.
+- The gateway `/openapi.json` and `/docs` are served by LiteLLM.
+  Specialized schemas are under `/specialized/` and require a bearer key.
 
 Standalone Vercel deployment (`api/index.py`) includes only FastAPI endpoints;
 it does not include LiteLLM or the Tesseract executable. Use Docker for OCR.
