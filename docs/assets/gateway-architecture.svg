@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+<title id="title">AIFactoryBox gateway architecture</title>
+<desc id="desc">Clients reach Nginx and LiteLLM. Open WebUI calls LiteLLM internally. LiteLLM calls local runtimes or cloud providers, and forwards specialized APIs to private FastAPI. Presidio masks supported chat text before a provider call. PostgreSQL supports persistent gateway management.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#60a5fa"/></marker></defs>
+<style>text{font-family:system-ui,sans-serif;fill:#e2e8f0;font-size:17px;text-anchor:middle}.small{font-size:14px;fill:#cbd5e1}.heading{font-size:22px;font-weight:650}.box{fill:#172554;stroke:#60a5fa;stroke-width:1.5;rx:14}.private{fill:#0f172a;stroke:#64748b;stroke-width:1.5;rx:14}.edge{fill:none;stroke:#60a5fa;stroke-width:2;marker-end:url(#arrow)}.dashed{stroke-dasharray:6 5}</style>
+<rect width="1200" height="720" rx="18" fill="#080f20"/>
+<text x="600" y="42" class="heading">One gateway, native model APIs and specialized pass-through</text>
+<rect class="box" x="30" y="270" width="160" height="80"/><text x="110" y="305">Clients</text><text x="110" y="330" class="small">Bearer key</text>
+<rect class="box" x="245" y="270" width="165" height="80"/><text x="327" y="305">Nginx</text><text x="327" y="330" class="small">Public ingress</text>
+<rect class="box" x="475" y="270" width="200" height="80"/><text x="575" y="305">LiteLLM</text><text x="575" y="330" class="small">API gateway</text>
+<rect class="private" x="475" y="90" width="200" height="70"/><text x="575" y="122">Open WebUI</text><text x="575" y="145" class="small">Internal chat client</text>
+<rect class="private" x="875" y="90" width="280" height="70"/><text x="1015" y="120">Local inference runtimes</text><text x="1015" y="145" class="small">TEI embeddings / reranking</text>
+<rect class="private" x="875" y="220" width="280" height="70"/><text x="1015" y="250">Cloud providers</text><text x="1015" y="275" class="small">OpenAI in current config</text>
+<rect class="private" x="875" y="350" width="280" height="70"/><text x="1015" y="380">FastAPI orchestrator</text><text x="1015" y="405" class="small">Private specialized APIs</text>
+<rect class="private" x="875" y="485" width="280" height="70"/><text x="1015" y="508">Specialized engines</text><text x="1015" y="529" class="small">Tesseract / Docling</text><text x="1015" y="548" class="small">Speaches / Piper</text>
+<rect class="private" x="475" y="485" width="200" height="70"/><text x="575" y="515">Presidio</text><text x="575" y="540" class="small">Chat text PII masking</text>
+<rect class="private" x="245" y="485" width="165" height="70"/><text x="327" y="515">PostgreSQL</text><text x="327" y="540" class="small">Gateway state</text>
+<path class="edge" d="M190 310H245"/><path class="edge" d="M410 310H475"/><path class="edge" d="M575 160V270"/>
+<path class="edge" d="M675 290H760V125H875"/><path class="edge" d="M675 310H800V255H875"/><path class="edge" d="M675 330H760V385H875"/>
+<text x="770" y="410" class="small">Pass-through</text><path class="edge" d="M1015 420V485"/>
+<path class="edge dashed" d="M575 350V485"/><text x="666" y="440" class="small">Before chat call</text>
+<path class="edge dashed" d="M505 350V445H327V485"/>
+<text x="590" y="615" class="small">Community ingress validates specialized API keys through LiteLLM /v1/models.</text>
+<text x="590" y="645" class="small">Pass-through does not automatically inherit chat PII masking, token budgets or per-route permissions.</text>
+<text x="590" y="681" class="small">Only Nginx publishes a host port; cloud providers are external.</text>
+</svg>

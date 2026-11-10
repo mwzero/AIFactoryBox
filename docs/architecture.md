@@ -1,66 +1,95 @@
 # Gateway architecture
 
-```text
-Clients → Nginx → LiteLLM ┬→ local runtimes / cloud providers
-                         └→ native pass-through → FastAPI → specialized services
-Open WebUI ─────→ LiteLLM
-```
+![Gateway architecture](assets/gateway-architecture.svg)
 
-LiteLLM owns model APIs and forwards the specialized document, privacy, audio
-and OCR APIs to FastAPI. Those APIs retain their URLs and payloads. No FastAPI
-port is published by Compose and Nginx has no direct FastAPI upstream.
+[Open diagram at full size](assets/gateway-architecture.svg).
 
-In the pinned Community version, native pass-through authentication requires
-Enterprise. The public Nginx ingress therefore validates bearer keys via
-LiteLLM `/v1/models` before forwarding specialized requests to LiteLLM. Keep
-LiteLLM and FastAPI private: pass-through routes use `auth: false` internally.
-This check validates the key, not specialized endpoint permissions, token
-budgets or per-user pass-through accounting. Any key accepted by that check
-can invoke specialized APIs. Native model routes retain their own controls.
+## Request paths
 
-Pass-through guardrails are opt-in; the chat PII guardrail does not automatically
-redact arbitrary JSON or uploaded files. Upstream error statuses are preserved,
-but error bodies use LiteLLM's error envelope. No wildcard upstream URLs are exposed.
+**Model requests:** clients use Nginx → LiteLLM → a supported local runtime or
+cloud provider. Open WebUI calls LiteLLM on the internal Compose network.
+LiteLLM owns `/v1/chat/completions`, `/v1/embeddings`, `/v1/models` and the native
+rerank endpoints. Before a supported chat text request reaches its model,
+LiteLLM invokes the configured Presidio pre-call guardrail.
 
-`/docs` and `/openapi.json` now belong to LiteLLM. The specialized schema, docs
-and health are available through authenticated `/specialized/openapi.json`,
-`/specialized/docs` and `/specialized/health`. `/health` checks LiteLLM liveness,
-not the readiness of every backend. Use a bearer-capable client to retrieve
-specialized documentation; a plain browser navigation supplies no bearer key.
+**Specialized requests:** clients use Nginx → LiteLLM pass-through → FastAPI →
+the specialized engine. Existing document, standalone privacy, audio and OCR
+paths are registered explicitly; there is no wildcard user-selected upstream.
+FastAPI runs Tesseract locally and calls the other services over HTTP.
 
-## Small defaults
+In the pinned LiteLLM Community version, native pass-through authentication
+requires Enterprise. Nginx therefore makes an internal GET `/v1/models`
+subrequest to LiteLLM to validate the bearer key before forwarding a specialized
+request. Rejected or missing keys cannot reach the pass-through. Internal routes
+use `auth: false`; **neither LiteLLM nor FastAPI may be published directly**.
 
-| Service | Default | Tradeoff |
+This check does not enforce specialized-route permissions, model token budgets
+or per-user pass-through accounting. Any key accepted by `/v1/models` can use
+specialized APIs. Pass-through guardrails are opt-in; chat masking does not
+implicitly inspect arbitrary JSON, images or multipart files. See [Security](security.md).
+
+## Components
+
+| Component | Responsibility | Public exposure |
 | --- | --- | --- |
-| Chat | OpenAI `gpt-4o-mini` (`chat-small`) | Cloud API; requires a key, not a local model |
-| Embeddings | `BAAI/bge-small-en-v1.5` (`embedding-small`), ~33M parameters | English retrieval; not an Italian embedding model |
-| Reranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` (`rerank-small`), ~23M | English; smaller than BGE reranker large, lower quality on difficult/multilingual tasks |
-| Transcription | `Systran/faster-whisper-tiny` via Speaches, ~39M, CPU int8 | Multilingual; lower accuracy than small |
-| OCR | Tesseract, `ita` + `eng` traineddata | CPU, no generative vision model; limited on complex layouts/handwriting |
-| PII NER | spaCy `it_core_news_sm` + `en_core_web_sm` | Small statistical models; detection is imperfect |
-| TTS | Existing Piper `it_IT-riccardo-x_low` | Retained adapter; deployment must supply the voice |
-| Documents | Existing Docling service | Not a small-model guarantee; document processing can still be heavy |
+| Nginx | Shared ingress, specialized-key validation and UI routing | Host port 80 |
+| LiteLLM Proxy | Model routing, configured controls and native pass-through | Internal port 4000 |
+| FastAPI orchestrator | Specialized adapters and local Tesseract OCR | Internal port 8080 |
+| Open WebUI | Chat client | Via Nginx `/` |
+| Presidio analyzer/anonymizer | Detect and mask configured text entities | Internal port 3000 in each container |
+| TEI | Embedding and reranking inference in separate containers | Internal port 80 |
+| Speaches | Whisper transcription runtime | Internal port 8000 |
+| Docling / Piper | Retained document and speech synthesis backends | Internal; adapter compatibility still needs integration validation |
+| PostgreSQL | Persistent LiteLLM management state | Internal port 5432 |
 
-The invalid Qwen vision and unavailable Llama Guard routes were removed. There
-is no content moderation or prompt-injection service in this first revision.
-Tesseract returns `{"filename": "...", "result": {"text": "..."}}`; its OCR
-result is now defined rather than depending on an undocumented external API.
+All published API paths reach LiteLLM. `/health` is a public LiteLLM liveness
+check; `/docs` and `/openapi.json` are gateway documentation. Authenticated
+`/specialized/health`, `/specialized/docs` and `/specialized/openapi.json` expose
+the corresponding FastAPI resources through pass-through.
 
-## API migration
+## Runtime, image and model
 
-- `/v1/embeddings/generate` is removed. Use `/v1/embeddings` with
-  `{"model":"embedding-small","input":["hello"]}` and a LiteLLM bearer key.
-- `/v1/rerank` now uses LiteLLM's native contract:
-  `{"model":"rerank-small","query":"returns","documents":["Returns within 30 days"],"top_n":1}`.
-  The response has `results[].relevance_score` and standard LiteLLM metadata.
-- `/v1/security/guardrail` is removed: its backend never existed in Compose.
-- The gateway `/openapi.json` and `/docs` are served by LiteLLM.
-  Specialized schemas are under `/specialized/` and require a bearer key.
+A Docker image packages an inference runtime and its dependencies. A model is
+a set of weights loaded by that runtime, often downloaded at startup. Docker
+does not remove CPU, RAM, GPU or disk requirements. The current TEI containers
+select weights with `--model-id`; the transcription request selects its Whisper
+model. Cloud model weights run in the provider infrastructure, not our containers.
 
-Standalone Vercel deployment (`api/index.py`) includes only FastAPI endpoints;
-it does not include LiteLLM or the Tesseract executable. Use Docker for OCR.
+LiteLLM can route to a runtime when its API is supported. It does not make a
+text-only model capable of OCR, speech recognition or high-quality embeddings.
+A shared runtime can serve multiple compatible models; different API families
+may require different runtimes. See the [current model inventory](models.md).
 
-Presidio uses small models at runtime, but its upstream base image can still
-contain a larger preinstalled model. This revision reduces loaded models, not
-necessarily image size. Compose excludes internal service names from the HTTP
-proxy so service-to-service requests stay on the Docker network.
+PostgreSQL is used by the current Compose configuration. LiteLLM itself can run
+without it for a static model-routing configuration, but that alternative needs
+its own configuration without `database_url`; removing just the database
+container from this stack is not sufficient.
+
+## Deployment boundaries
+
+`docker-compose.yml`, `config/litellm-config.yaml` and `nginx/nginx.conf` define
+the current gateway. FastAPI remains a separate internal service, rather than
+embedding the LiteLLM SDK and rebuilding proxy management in Python.
+
+`api/index.py` and `vercel.json` provide a separate Vercel adapter that imports
+FastAPI directly. It does not include Nginx, LiteLLM, its authentication or
+Presidio guardrail, service containers, or the Tesseract executable. Its
+`/health` response is FastAPI health, not Compose gateway health. It is not an
+alternative deployment of the complete gateway.
+
+The static website is documentation, not a live API playground. Minimal CPU/GPU
+profiles, Ollama/Gemma and a model-management console remain proposed work.
+
+## Migration from the original orchestrator
+
+| Before | Current contract |
+| --- | --- |
+| `/v1/embeddings/generate`, `inputs` | `/v1/embeddings`, `model` + `input` |
+| Python `/v1/rerank`, `documents` without a model | LiteLLM `/v1/rerank` or `/rerank`, explicit `model` |
+| `/v1/security/guardrail` | Removed; the backend was not configured. Presidio is not a moderation replacement. |
+| Direct host port 8080 | Removed; specialized calls enter through Nginx/LiteLLM. |
+| Orchestrator docs at `/docs` | Gateway docs at `/docs`; specialized schema under `/specialized/`. |
+| Backend-specific error body | HTTP status retained; pass-through errors use LiteLLM's error envelope. |
+
+OCR returns `{"filename":"...","result":{"text":"..."}}`. It is image text
+recognition, not a document-layout or structured-table extraction API.

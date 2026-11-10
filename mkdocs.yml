@@ -1,5 +1,5 @@
 site_name: AIFactoryBox
-site_description: Enterprise AI Services Gateway & Suite
+site_description: LiteLLM gateway with private specialized FastAPI services
 site_url: https://mwzero.github.io/AIFactoryBox/
 repo_url: https://github.com/mwzero/AIFactoryBox
 repo_name: mwzero/AIFactoryBox
@@ -45,6 +45,8 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Architecture: architecture.md
-  - Micro-Primitive APIs: apis.md
+  - APIs: apis.md
+  - Models & Planned Profiles: models.md
   - Deployment & Quickstart: quickstart.md
-  - Control Plane & Security: security.md
+  - Privacy & Access Control: security.md
+  - Development & Validation: development.md

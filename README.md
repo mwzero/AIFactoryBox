@@ -1,25 +1,30 @@
 # AIFactoryBox
 
-A gateway composed of LiteLLM Proxy and a small FastAPI service for specialized
-APIs. All API requests go through LiteLLM; native pass-through forwards documents,
-standalone anonymization, audio and OCR to internal FastAPI. Nginx exposes one
-entry point and validates specialized API keys through LiteLLM. See the
-[authentication limits](docs/security.md) of Community pass-through.
+A self-hosted gateway built around LiteLLM Proxy. Model APIs reach local
+inference runtimes or cloud providers; specialized document, audio, OCR and
+standalone privacy APIs pass through LiteLLM to a small internal FastAPI service.
 
-See [Quickstart](docs/quickstart.md), [Architecture and small-model choices](docs/architecture.md),
-[API migration](docs/apis.md), and [PII controls](docs/security.md).
+![Gateway architecture](docs/assets/gateway-architecture.svg)
 
-## Development checks
+[Open diagram at full size](docs/assets/gateway-architecture.svg).
 
-```bash
-python -m venv .venv
-.venv/bin/pip install -r orchestrator/requirements.txt -r requirements-dev.txt
-.venv/bin/pytest -q
-.venv/bin/flake8 orchestrator/ --select=E9,F63,F7,F82
-.venv/bin/mkdocs build --strict
-```
+Nginx is the public ingress. For Community pass-through routes it validates
+bearer keys through LiteLLM before forwarding requests. This is key validation,
+not automatic PII protection, fine-grained permissions or token budgeting for
+specialized operations. Read the [security boundaries](docs/security.md).
 
-Docker provides Tesseract for the OCR integration test. On a native development
-machine install Tesseract plus English and Italian language data; the OCR test
-is skipped if the executable is absent. Tests use local service doubles and
-never call paid model providers or download inference models.
+## Start here
+
+- [Quickstart](docs/quickstart.md): configure credentials, start Compose, create a key and check services.
+- [Architecture](docs/architecture.md): request paths, component responsibilities and runtime/model distinction.
+- [API guide](docs/apis.md): authenticated examples and contract changes.
+- [Model inventory](docs/models.md): current defaults, language tradeoffs and proposed profiles.
+- [Development and validation](docs/development.md): local setup, tests and what has actually been verified.
+
+The current Compose stack includes PostgreSQL, Open WebUI and specialized engines.
+It is not the proposed two-container LiteLLM + Ollama profile. No Ollama/Gemma
+profile or model-management console is implemented yet.
+
+The static `website/` page describes the project. The Compose gateway serves
+Open WebUI at `/`; neither the static site nor the Vercel adapter deploys the
+complete gateway.
