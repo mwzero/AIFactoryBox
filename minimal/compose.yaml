@@ -1,0 +1,48 @@
+name: aifactorybox-minimal
+
+services:
+  ollama:
+    image: ollama/ollama:0.6.8
+    volumes:
+      - models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "OLLAMA_HOST=127.0.0.1:11434 ollama list >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+  pull-model:
+    image: ollama/ollama:0.6.8
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      NO_PROXY: ollama,localhost,127.0.0.1
+      no_proxy: ollama,localhost,127.0.0.1
+    command: ["pull", "gemma3:1b"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+  gateway:
+    image: ghcr.io/berriai/litellm:main-v1.83.14-stable
+    entrypoint: ["python", "/app/minimal/run.py"]
+    command: ["--host", "0.0.0.0", "--port", "4000"]
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?Run python minimal/run.py --init first}
+      OLLAMA_API_BASE: http://ollama:11434
+      NO_PROXY: ollama,localhost,127.0.0.1
+      no_proxy: ollama,localhost,127.0.0.1
+    volumes:
+      - ./config.yaml:/app/minimal/config.yaml:ro
+      - ./run.py:/app/minimal/run.py:ro
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      pull-model:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  models:

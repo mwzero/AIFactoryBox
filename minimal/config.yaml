@@ -1,0 +1,13 @@
+# Shared by native Python and Docker. No database, cloud provider or custom API.
+model_list:
+  - model_name: chat-default
+    litellm_params:
+      model: ollama_chat/gemma3:1b
+      api_base: os.environ/OLLAMA_API_BASE
+
+litellm_settings:
+  request_timeout: 120
+  num_retries: 0
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

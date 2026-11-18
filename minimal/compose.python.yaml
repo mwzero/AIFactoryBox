@@ -1,0 +1,5 @@
+# Only for Python on the host + Ollama in Docker. Do not use for the full Docker mode.
+services:
+  ollama:
+    ports:
+      - "127.0.0.1:11434:11434"

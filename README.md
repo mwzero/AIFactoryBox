@@ -1,86 +1,36 @@
+# AIFactoryBox
 
-## Navigation Map
+A self-hosted gateway built around LiteLLM Proxy. Model APIs reach local
+inference runtimes or cloud providers; specialized document, audio, OCR,
+standalone privacy and Knowledge Base (`pgvector`) APIs pass through LiteLLM
+to an internal FastAPI service.
 
-Servizio | Public URL | Internal URL 
-Open WebUI Playground   | http://localhost/       | open-webui:8080
-Primitive APIs          | http://localhost/v1/*   | orchestrator:8080/v1/*
-Scalar API Docs         | http://localhost/docs   | scalar-docs:8080
-LiteLLM Admin UI        | http://localhost/admin/ | litellm-proxy:4000/ui/   Health Checkhttp://localhost/healthorchestrator:8080/health
-<p align="center">
-  <img src="assets/logo.svg" alt="AIFactoryBox Logo" width="450">
-</p>
+![Gateway architecture](docs/assets/gateway-architecture.svg)
 
-**AIFactoryBox** is a self-hosted "in-a-box" Enterprise AI Services Gateway designed to serve, orchestrate, and secure standardized AI Micro-Primitive APIs across enterprise applications.
+[Open diagram at full size](docs/assets/gateway-architecture.svg).
 
-## 🌟 Key Features
+Nginx is the public ingress. For Community pass-through routes it validates
+bearer keys through LiteLLM before forwarding requests. This is key validation,
+not automatic PII protection, fine-grained permissions or token budgeting for
+specialized operations. Knowledge ingestion and search routes forward the caller
+key to LiteLLM so embedding and reranking calls are tracked in LiteLLM's audit
+and spend logs. Read the [security boundaries](docs/security.md).
 
-* **Anti-Vendor Lock-in**: Exposes standardized functional AI primitive endpoints independent of underlying models or providers.
-* **DLP & PII Masking Pipeline**: Automatic detection and anonymization of sensitive data prior to external LLM forwarding using Microsoft Presidio.
-* **AI Safety & Guardrails**: Real-time moderation and prompt injection detection before requests hit core models.
-* **Control Plane & Governance**: Rate limiting, tenant budgeting, usage quota tracking, and audit logging via LiteLLM Proxy and PostgreSQL.
-* **Playground & Interactive Docs**: Web UI for business users (Open WebUI) and interactive developer API portal (Scalar UI).
+## Start here
 
-## Navigation Map
+- [Minimal local gateway](minimal/README.md): LiteLLM in Python or Docker, Ollama and Gemma 3 1B, without a database.
+- [Quickstart](docs/quickstart.md): configure credentials, start Compose, create a key and check services.
+- [Architecture](docs/architecture.md): request paths, component responsibilities and runtime/model distinction.
+- [API guide](docs/apis.md): authenticated examples, Knowledge Base RAG endpoints and contract changes.
+- [Model inventory](docs/models.md): current defaults, language tradeoffs and proposed profiles.
+- [Development and validation](docs/development.md): local setup, tests and what has actually been verified.
+- **Python Flow Runner (`flows/`)**: zero-dependency async client SDK (`flows/sdk.py`) and composable pipelines (`ingest-safe`, `ask`, `voice-ask`) in `flows/runner.py`.
 
-Servizio | Public URL | Internal URL |
-| :--- | :--- | :--- | 
-Open WebUI Playground  | http://localhost/       | open-webui:8080          |
-Primitive APIs         | http://localhost/v1/*   | orchestrator:8080/v1/*   |
-Scalar API Docs        | http://localhost/docs   | scalar-docs:8080         |
-LiteLLM Admin UI       | http://localhost/admin/ | litellm-proxy:4000/ui/   |  
-Health Check           | http://localhost/health | orchestrator:8080/health |
+The current Compose stack includes PostgreSQL (`pgvector`), Open WebUI and specialized engines.
+The independent `minimal/` variant provides LiteLLM + Ollama/Gemma without those
+services. Its real-model validation remains pending; no model-management console
+is implemented.
 
-## 🛠️ Micro-Primitive APIs
-
-| Endpoint | Method | Input Payload | Output / Description | Backend Engine |
-| :--- | :--- | :--- | :--- | :--- |
-| `/v1/document/to-markdown` | `POST` | `multipart/form-data` (PDF, DOCX) | Structured Markdown preserving tables and layout | Docling (IBM) |
-| `/v1/document/extract-tables` | `POST` | `multipart/form-data` (PDF, Image) | Extracted structured tabular data (JSON/CSV) | Table Transformer / TATR |
-| `/v1/privacy/anonymize` | `POST` | `application/json` (`text`, `entities`) | Anonymized text + temporary safe mapping | Microsoft Presidio / GliNER |
-| `/v1/audio/transcribe` | `POST` | `multipart/form-data` (Audio/Video) | Timestamped text transcript with speaker diarization | Faster-Whisper |
-| `/v1/audio/synthesize` | `POST` | `application/json` (`text`, `voice`) | Synthesized speech audio output (WAV/MP3) | Piper TTS / XTTS v2 |
-| `/v1/embeddings/generate` | `POST` | `application/json` (`inputs`) | Dense/sparse vector representations | HuggingFace TEI |
-| `/v1/rerank` | `POST` | `application/json` (`query`, `documents`) | Re-ordered document list optimized for RAG | HuggingFace TEI (BGE-Reranker) |
-| `/v1/vision/ocr` | `POST` | `multipart/form-data` (Image) | Multilingual text extraction from scans and images | PaddleOCR / GOT-OCR2 |
-| `/v1/security/guardrail` | `POST` | `application/json` (`prompt`, `context`) | Moderation verdict and prompt injection detection | NeMo Guardrails / Llama Guard |
-
-## 📍 Service Endpoint Map
-
-| Service | Description | Local URL |
-| :--- | :--- | :--- |
-| **FastAPI Orchestrator** | Primitive API Entrypoint & Router | `http://localhost:8080` |
-| **Scalar UI** | Interactive API Documentation Portal | `http://localhost:7000` |
-| **Open WebUI** | Conversational & RAG Playground | `http://localhost:3000` |
-| **LiteLLM Proxy** | Core LLM Gateway, Auth & Quota Manager | `http://localhost:4000` |
-| **Presidio Analyzer** | PII Detection Middleware | `http://localhost:5001` |
-| **Docling Engine** | Document Extraction Engine | `http://localhost:5003` |
-| **Faster-Whisper** | Speech Transcription Engine | `http://localhost:8000` |
-| **TEI Embeddings & Rerank** | Vector Embeddings & Re-Ranking Engine | `http://localhost:8001` |
-| **Piper TTS Engine** | Text-to-Speech Synthesis Engine | `http://localhost:8002` |
-| **PaddleOCR Engine** | Vision & Optical Character Recognition Engine | `http://localhost:8003` |
-| **Llama Guard Engine** | AI Guardrail & Security Engine | `http://localhost:8004` |
-
-## 🚀 Quickstart
-
-### Prerequisites
-
-* Docker Engine `>= 24.0`
-* Docker Compose `>= 2.20`
-
-### Installation & Run
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-org/AIFactoryBox.git
-   cd AIFactoryBox
-   ```
-
-2. **Start the infrastructure:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-3. **Access Services:**
-   * Test APIs via **Scalar UI**: http://localhost:7000
-   * Access User Playground via **Open WebUI**: http://localhost:3000
-   * Directly call Primitive APIs via **Orchestrator**: http://localhost:8080
+The static `website/` page describes the project. The Compose gateway serves
+Open WebUI at `/`; neither the static site nor the Vercel adapter deploys the
+complete gateway.
