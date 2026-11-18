@@ -10,6 +10,10 @@
       "destination": "/website/index.html"
     },
     {
+      "source": "/console",
+      "destination": "/orchestrator/console.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/website/$1"
     }
