@@ -96,7 +96,7 @@ th,td{padding:12px 8px}}
 <rect class="private" x="875" y="350" width="280" height="70"/><text x="1015" y="380">FastAPI orchestrator</text><text x="1015" y="405" class="small">Private specialized APIs</text>
 <rect class="private" x="875" y="485" width="280" height="70"/><text x="1015" y="508">Specialized engines</text><text x="1015" y="529" class="small">Tesseract / Docling</text><text x="1015" y="548" class="small">Speaches / Piper</text>
 <rect class="private" x="475" y="485" width="200" height="70"/><text x="575" y="515">Presidio</text><text x="575" y="540" class="small">Chat text PII masking</text>
-<rect class="private" x="245" y="485" width="165" height="70"/><text x="327" y="515">PostgreSQL</text><text x="327" y="540" class="small">Gateway state</text>
+<rect class="private" x="245" y="485" width="165" height="70"/><text x="327" y="515">PostgreSQL</text><text x="327" y="540" class="small">State &amp; pgvector</text>
 <path class="edge" d="M190 310H245"/><path class="edge" d="M410 310H475"/><path class="edge" d="M575 160V270"/>
 <path class="edge" d="M675 290H760V125H875"/><path class="edge" d="M675 310H800V255H875"/><path class="edge" d="M675 330H760V385H875"/>
 <text x="770" y="410" class="small">Pass-through</text><path class="edge" d="M1015 420V485"/>
@@ -117,8 +117,8 @@ th,td{padding:12px 8px}}
 <p>LiteLLM forwards explicit OCR, document, audio and standalone anonymization paths to FastAPI. Nginx has no direct FastAPI upstream, and FastAPI publishes no host port.</p>
 </article>
 <article class="card">
-<h3>Community authentication</h3>
-<p>Nginx validates specialized bearer keys through LiteLLM before forwarding. This does not add fine-grained permissions, token budgets or automatic PII masking to uploaded files.</p>
+<h3>Community authentication &amp; flows</h3>
+<p>Nginx validates specialized bearer keys through LiteLLM before forwarding. Client-side Python workflows in <code>flows/</code> (<code>python -m flows.runner</code>) chain OCR, PII anonymization, <code>pgvector</code> RAG and TTS over the authenticated ingress.</p>
 </article>
 </div>
 </section>
@@ -194,6 +194,27 @@ th,td{padding:12px 8px}}
 </td>
 <td>LiteLLM → FastAPI → Piper</td>
 <td>Retained adapter; backend/voice contract unverified</td>
+</tr>
+<tr>
+<td>
+<code>/v1/knowledge/collections</code>
+</td>
+<td>LiteLLM → FastAPI → PostgreSQL (<code>pgvector</code>)</td>
+<td>Create, list and delete vector collections in <code>knowledge_db</code></td>
+</tr>
+<tr>
+<td>
+<code>/v1/knowledge/ingest</code>
+</td>
+<td>LiteLLM → FastAPI → Docling + LiteLLM + <code>pgvector</code></td>
+<td>Chunk, embed via <code>embedding-small</code> and store vectors</td>
+</tr>
+<tr>
+<td>
+<code>/v1/knowledge/search</code>
+</td>
+<td>LiteLLM → FastAPI → LiteLLM + <code>pgvector</code></td>
+<td>Vector retrieval with metadata filters and optional reranking</td>
 </tr>
 </tbody>
 </table>

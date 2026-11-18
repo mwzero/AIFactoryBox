@@ -14,7 +14,8 @@ resource use, license, download access and representative task quality.
 | OCR | Tesseract with `ita` and `eng` language data | Orchestrator image + request `language` | CPU, no vision LLM; limited on handwriting and complex layouts. |
 | PII detection | spaCy `it_core_news_sm` and `en_core_web_sm`, plus Presidio recognizers | `presidio/nlp.yaml` | Lightweight NER, imperfect detection; default guardrail language is Italian. |
 | Speech synthesis | Piper voice `it_IT-riccardo-x_low` | FastAPI request `voice` | Retained integration; voice availability and backend contract remain unverified. |
-| Document conversion | Docling service | Compose + `DOCLING_URL` | Retained adapter; endpoint compatibility and model downloads remain unverified. |
+| Document conversion | Docling service | Compose + `DOCLING_URL` | Retained adapter (also used by `/v1/knowledge/ingest` for binary documents); endpoint compatibility and model downloads remain unverified. |
+| Knowledge Vector Store | PostgreSQL 15 + `pgvector` (`pgvector/pgvector:pg15`) | `KNOWLEDGE_DB_URL` (`knowledge_db`) | Consolidates vector storage onto the existing PostgreSQL instance; uses `embedding-small` and `rerank-small` via LiteLLM. |
 
 TEI and Speaches use CPU images in the current Compose stack. No GPU service
 reservation or hardware profile is configured. The Presidio base image may

@@ -29,7 +29,7 @@ Edit `.env` locally. Never commit it or paste real credentials into issue report
 | Variable | Purpose |
 | --- | --- |
 | `LITELLM_MASTER_KEY` | Random administrative key beginning with `sk-`; not a general client key. |
-| `POSTGRES_PASSWORD` | Random URL-safe password; it is interpolated into `DATABASE_URL`. |
+| `POSTGRES_PASSWORD` | Random URL-safe password; interpolated into `DATABASE_URL` (`litellm_db`) and `KNOWLEDGE_DB_URL` (`knowledge_db`). |
 | `OPENAI_API_KEY` | Required for `chat-small`; leave empty only if not making cloud chat calls. |
 | `WEBUI_LITELLM_API_KEY` | A virtual key generated after LiteLLM starts. Keep the initial nonempty placeholder only during bootstrap. |
 
@@ -79,6 +79,18 @@ Open WebUI is at `http://localhost/`. It calls LiteLLM internally. Configure
 virtual-key model access, budgets and limits according to your needs; those
 policies are not supplied by the example key-generation request above.
 
+
+### Upgrading an existing PostgreSQL volume for Knowledge Base
+
+If you already have an existing `langfuse_postgres_data` Docker volume initialized
+before `pgvector` support was added, PostgreSQL skips `/docker-entrypoint-initdb.d/`.
+Create `knowledge_db` once manually (the orchestrator automatically creates the
+`vector` extension and tables on first connection):
+
+```bash
+docker compose exec -T postgres-audit psql -U litellm -d litellm_db -c "CREATE DATABASE knowledge_db;"
+```
+
 ## Check the API paths
 
 Use a generated key in a bearer-capable client. The following Bash commands
@@ -95,7 +107,7 @@ curl --fail -H "Authorization: Bearer $AIFACTORYBOX_API_KEY" http://localhost/sp
 `/v1/models` verifies key acceptance and lists aliases, not loaded model
 readiness. `/specialized/health` exercises ingress → LiteLLM → FastAPI, but
 FastAPI's health handler does not check its engine dependencies. Continue with
-[functional API examples](apis.md), especially OCR and a controlled chat PII test.
+[functional API examples](apis.md) or run end-to-end pipelines using the [Python Flow Runner](flows.md) (`python -m flows.runner`).
 
 `/docs` and `/openapi.json` belong to LiteLLM. The specialized schema is at
 `/specialized/openapi.json`. Plain browser navigation to `/specialized/docs`

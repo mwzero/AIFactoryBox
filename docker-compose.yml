@@ -29,6 +29,11 @@ services:
     - PRESIDIO_ANONYMIZER_URL=http://pii-presidio-anonymizer:3000/anonymize
     - WHISPER_URL=http://engine-speech-transcribe:8000/v1/audio/transcriptions
     - TTS_URL=http://engine-tts:5500/api/tts
+    - LITELLM_BASE_URL=http://litellm-proxy:4000
+    - LITELLM_EMBEDDING_MODEL=embedding-small
+    - LITELLM_RERANK_MODEL=rerank-small
+    - LITELLM_SERVICE_KEY=${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY}
+    - KNOWLEDGE_DB_URL=postgresql://litellm:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres-audit:5432/knowledge_db
     - NO_PROXY=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
     - no_proxy=localhost,127.0.0.1,nginx,orchestrator,open-webui,litellm-proxy,presidio-analyzer,presidio-anonymizer,docling-service,faster-whisper,piper-tts,tei-embeddings,tei-rerank,postgres-audit,ai-gateway-proxy,ai-gateway-orchestrator,ai-playground-ui,ai-gateway-core,pii-presidio-analyzer,pii-presidio-anonymizer,engine-doc-extraction,engine-speech-transcribe,engine-tts,engine-vector-embeddings,engine-rerank,controlplane-db
     - SCALAR_OPENAPI_URL=/specialized/openapi.json
@@ -40,6 +45,9 @@ services:
     - presidio-anonymizer
     - faster-whisper
     - piper-tts
+    - tei-embeddings
+    - tei-rerank
+    - postgres-audit
     restart: unless-stopped
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -139,7 +147,7 @@ services:
     - ai-gateway-net
     restart: unless-stopped
   postgres-audit:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: controlplane-db
     environment:
     - POSTGRES_USER=litellm
@@ -147,6 +155,7 @@ services:
     - POSTGRES_DB=litellm_db
     volumes:
     - langfuse_postgres_data:/var/lib/postgresql/data
+    - ./postgres/init:/docker-entrypoint-initdb.d:ro
     networks:
     - ai-gateway-net
     restart: unless-stopped

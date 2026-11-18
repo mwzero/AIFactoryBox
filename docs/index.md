@@ -1,8 +1,8 @@
 # AIFactoryBox
 
-One API gateway for model calls and specialized AI services. LiteLLM provides
-the model interfaces and native pass-through; FastAPI retains the adapters and
-local OCR functionality that the model gateway does not supply.
+One API gateway for model calls, specialized AI services and Knowledge Base RAG.
+LiteLLM provides the model interfaces and native pass-through; FastAPI retains
+the document, audio, privacy, local OCR and `pgvector` Knowledge Base adapters.
 
 ![Gateway architecture](assets/gateway-architecture.svg)
 
@@ -12,10 +12,11 @@ local OCR functionality that the model gateway does not supply.
 
 1. [Architecture](architecture.md): understand the request paths and boundaries.
 2. [Quickstart](quickstart.md): configure and start the existing stack.
-3. [APIs](apis.md): call model and specialized endpoints with a bearer key.
-4. [Security](security.md): understand PII masking and Community authentication limits.
-5. [Models](models.md): inspect the actual defaults and their tradeoffs.
-6. [Development](development.md): run checks and distinguish test evidence from full-stack readiness.
+3. [APIs](apis.md): call model, specialized and `/v1/knowledge/*` endpoints with a bearer key.
+4. [Composable Python Flows](flows.md): orchestrate multi-step ingestion, RAG and voice workflows via `flows/`.
+5. [Security](security.md): understand PII masking, header forwarding and Community authentication limits.
+6. [Models](models.md): inspect the actual defaults and their tradeoffs.
+7. [Development](development.md): run checks and distinguish test evidence from full-stack readiness.
 
 The full gateway targets Docker Compose. The separate [minimal variant](minimal.md)
 provides LiteLLM in Python or Docker with Ollama/Gemma, without a database.

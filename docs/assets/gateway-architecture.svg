@@ -14,7 +14,7 @@
 <rect class="private" x="875" y="350" width="280" height="70"/><text x="1015" y="380">FastAPI orchestrator</text><text x="1015" y="405" class="small">Private specialized APIs</text>
 <rect class="private" x="875" y="485" width="280" height="70"/><text x="1015" y="508">Specialized engines</text><text x="1015" y="529" class="small">Tesseract / Docling</text><text x="1015" y="548" class="small">Speaches / Piper</text>
 <rect class="private" x="475" y="485" width="200" height="70"/><text x="575" y="515">Presidio</text><text x="575" y="540" class="small">Chat text PII masking</text>
-<rect class="private" x="245" y="485" width="165" height="70"/><text x="327" y="515">PostgreSQL</text><text x="327" y="540" class="small">Gateway state</text>
+<rect class="private" x="245" y="485" width="165" height="70"/><text x="327" y="515">PostgreSQL</text><text x="327" y="540" class="small">State &amp; pgvector</text>
 <path class="edge" d="M190 310H245"/><path class="edge" d="M410 310H475"/><path class="edge" d="M575 160V270"/>
 <path class="edge" d="M675 290H760V125H875"/><path class="edge" d="M675 310H800V255H875"/><path class="edge" d="M675 330H760V385H875"/>
 <text x="770" y="410" class="small">Pass-through</text><path class="edge" d="M1015 420V485"/>

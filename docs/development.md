@@ -71,8 +71,8 @@ copy consistent if the request path changes.
 
 ## Validation status
 
-The implementation branch previously completed **10 tests with the Docker check
-enabled**, with real Tesseract available, plus fatal-error lint, dependency
+The implementation branch previously completed **12 tests with the Docker check
+enabled** (including Knowledge Base `pgvector` + LiteLLM pass-through and `flows/` pipeline tests), with real Tesseract available, plus fatal-error lint, dependency
 consistency, Compose validation and a strict MkDocs build. The orchestrator image
 was built and its health and Italian/English OCR exercised in the container.
 
