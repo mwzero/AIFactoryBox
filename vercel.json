@@ -2,16 +2,12 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/(v1/.*|health|docs|openapi.json)",
-      "destination": "/api/index.py"
+    "source": "/(v1/.*|health|status|docs|openapi.json|console/?)",
+    "destination": "/api/index.py"
     },
     {
       "source": "/",
       "destination": "/website/index.html"
-    },
-    {
-      "source": "/console",
-      "destination": "/orchestrator/console.html"
     },
     {
       "source": "/(.*)",
