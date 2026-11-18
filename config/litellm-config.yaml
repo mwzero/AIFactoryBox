@@ -78,6 +78,39 @@ general_settings:
     headers: {}
     forward_headers: false
     merge_query_params: true
+  - path: /v1/knowledge/collections
+    target: http://orchestrator:8080/v1/knowledge/collections
+    auth: false
+    methods:
+    - GET
+    - POST
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/knowledge/collections/{collection_name}
+    target: http://orchestrator:8080/v1/knowledge/collections/{collection_name}
+    auth: false
+    methods:
+    - DELETE
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/knowledge/ingest
+    target: http://orchestrator:8080/v1/knowledge/ingest
+    auth: false
+    methods:
+    - POST
+    headers: {}
+    forward_headers: true
+    merge_query_params: true
+  - path: /v1/knowledge/search
+    target: http://orchestrator:8080/v1/knowledge/search
+    auth: false
+    methods:
+    - POST
+    headers: {}
+    forward_headers: true
+    merge_query_params: true
   - path: /specialized/docs
     target: http://orchestrator:8080/docs
     auth: false
