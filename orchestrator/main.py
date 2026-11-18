@@ -1,5 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request, status
+from fastapi.responses import HTMLResponse
+from pathlib import Path
+import time
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
@@ -89,6 +92,24 @@ async def ensure_knowledge_schema(pool: asyncpg.Pool) -> None:
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_kb_chunks_metadata ON kb_chunks USING gin(metadata);")
 
 
+async def ensure_knowledge_database() -> None:
+    """Crea autonomamente il database logico target (es. knowledge_db) se non esiste ancora."""
+    from urllib.parse import urlparse, urlunparse
+    parsed = urlparse(KNOWLEDGE_DB_URL)
+    target_db = parsed.path.lstrip("/")
+    if not target_db or not re.match(r"^[a-zA-Z0-9_-]{1,63}$", target_db):
+        return
+    admin_url = urlunparse(parsed._replace(path="/postgres"))
+    conn = await asyncpg.connect(dsn=admin_url)
+    try:
+        exists = await conn.fetchval("SELECT 1 FROM pg_database WHERE datname = $1", target_db)
+        if not exists:
+            await conn.execute(f'CREATE DATABASE "{target_db}"')
+            logger.info(f"Created PostgreSQL database '{target_db}' automatically.")
+    finally:
+        await conn.close()
+
+
 async def get_db_pool() -> asyncpg.Pool:
     global _db_pool
     if _db_pool is not None:
@@ -99,7 +120,11 @@ async def get_db_pool() -> asyncpg.Pool:
             detail="KNOWLEDGE_DB_URL is not configured."
         )
     try:
-        _db_pool = await asyncpg.create_pool(dsn=KNOWLEDGE_DB_URL, min_size=1, max_size=10)
+        try:
+            _db_pool = await asyncpg.create_pool(dsn=KNOWLEDGE_DB_URL, min_size=1, max_size=10)
+        except asyncpg.InvalidCatalogNameError:
+            await ensure_knowledge_database()
+            _db_pool = await asyncpg.create_pool(dsn=KNOWLEDGE_DB_URL, min_size=1, max_size=10)
         await ensure_knowledge_schema(_db_pool)
         return _db_pool
     except Exception as exc:
@@ -235,6 +260,80 @@ def chunk_text(text: str, chunk_size: int = 800, chunk_overlap: int = 120) -> Li
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "AIFactoryBox Orchestrator", "version": "1.2.0"}
+
+CONSOLE_HTML_PATH = Path(__file__).resolve().parent / "console.html"
+
+
+@app.get("/console", include_in_schema=False, response_class=HTMLResponse)
+@app.get("/console/", include_in_schema=False, response_class=HTMLResponse)
+async def operations_console():
+    if not CONSOLE_HTML_PATH.is_file():
+        raise HTTPException(status_code=404, detail="Operations console asset not found")
+    return HTMLResponse(content=CONSOLE_HTML_PATH.read_text(encoding="utf-8"))
+
+
+async def _probe_http(client: httpx.AsyncClient, url: str) -> Dict[str, Any]:
+    start = time.perf_counter()
+    try:
+        resp = await client.get(url)
+        latency = round((time.perf_counter() - start) * 1000, 1)
+        if resp.status_code < 500:
+            return {"status": "ok", "detail": f"Reachable (HTTP {resp.status_code})", "latency_ms": latency}
+        return {"status": "degraded", "detail": f"HTTP {resp.status_code}", "latency_ms": latency}
+    except Exception as exc:
+        latency = round((time.perf_counter() - start) * 1000, 1)
+        return {"status": "unreachable", "detail": str(exc), "latency_ms": latency}
+
+
+@app.get("/status", summary="Verifica lo stato di readiness dei servizi e dei motori interni")
+async def stack_status():
+    services: Dict[str, Any] = {
+        "orchestrator": {"status": "ok", "detail": "FastAPI v1.2.0 active", "latency_ms": 0.0}
+    }
+
+    # Probe PostgreSQL + pgvector
+    start_db = time.perf_counter()
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            col_count = await conn.fetchval("SELECT COUNT(*) FROM kb_collections")
+            chunk_count = await conn.fetchval("SELECT COUNT(*) FROM kb_chunks")
+        services["postgres_pgvector"] = {
+            "status": "ok",
+            "detail": f"Connected ({col_count} collections, {chunk_count} chunks)",
+            "latency_ms": round((time.perf_counter() - start_db) * 1000, 1),
+        }
+    except Exception as exc:
+        detail = exc.detail if isinstance(exc, HTTPException) else str(exc)
+        services["postgres_pgvector"] = {
+            "status": "unreachable",
+            "detail": str(detail),
+            "latency_ms": round((time.perf_counter() - start_db) * 1000, 1),
+        }
+
+    # Probe internal HTTP backends concurrently
+    from urllib.parse import urlparse
+    def base_of(u: str) -> str:
+        p = urlparse(u)
+        return f"{p.scheme}://{p.netloc}"
+
+    targets = {
+        "litellm_proxy": f"{LITELLM_BASE_URL}/health/liveliness",
+        "presidio_analyzer": f"{base_of(PRESIDIO_ANALYZER_URL)}/health",
+        "presidio_anonymizer": f"{base_of(PRESIDIO_ANONYMIZER_URL)}/health",
+        "docling": f"{base_of(DOCLING_URL)}/health",
+        "whisper_speaches": f"{base_of(WHISPER_URL)}/health",
+        "piper_tts": f"{base_of(TTS_URL)}/",
+    }
+
+    async with httpx.AsyncClient(timeout=3.0, trust_env=False) as client:
+        results = await asyncio.gather(*(_probe_http(client, u) for u in targets.values()))
+        for name, probe_res in zip(targets.keys(), results):
+            services[name] = probe_res
+
+    overall = "ok" if all(s["status"] == "ok" for s in services.values()) else "degraded"
+    return {"status": overall, "services": services}
+
 
 # 1. Document Extraction
 @app.post("/v1/document/to-markdown", summary="Converte documenti (PDF, DOCX) in Markdown")

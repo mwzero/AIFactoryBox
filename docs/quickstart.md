@@ -75,21 +75,17 @@ Save the returned key securely as `WEBUI_LITELLM_API_KEY` in `.env`, then run:
 docker compose up -d open-webui
 ```
 
-Open WebUI is at `http://localhost/`. It calls LiteLLM internally. Configure
+Open WebUI is at `http://localhost/`, and the lightweight **Operations Console** is at `http://localhost/console/`. Both call LiteLLM internally. Configure
 virtual-key model access, budgets and limits according to your needs; those
 policies are not supplied by the example key-generation request above.
 
 
-### Upgrading an existing PostgreSQL volume for Knowledge Base
+### Automatic Knowledge Base Database Initialization
 
-If you already have an existing `langfuse_postgres_data` Docker volume initialized
-before `pgvector` support was added, PostgreSQL skips `/docker-entrypoint-initdb.d/`.
-Create `knowledge_db` once manually (the orchestrator automatically creates the
-`vector` extension and tables on first connection):
-
-```bash
-docker compose exec -T postgres-audit psql -U litellm -d litellm_db -c "CREATE DATABASE knowledge_db;"
-```
+`knowledge_db`, the `pgvector` extension, and the vector tables (`kb_collections`,
+`kb_chunks`) are provisioned automatically—both on fresh volumes via
+`postgres/init/01-init-knowledge.sql` and on pre-existing PostgreSQL volumes when
+the orchestrator connects to `KNOWLEDGE_DB_URL` for the first time.
 
 ## Check the API paths
 
@@ -107,7 +103,7 @@ curl --fail -H "Authorization: Bearer $AIFACTORYBOX_API_KEY" http://localhost/sp
 `/v1/models` verifies key acceptance and lists aliases, not loaded model
 readiness. `/specialized/health` exercises ingress → LiteLLM → FastAPI, but
 FastAPI's health handler does not check its engine dependencies. Continue with
-[functional API examples](apis.md) or run end-to-end pipelines using the [Python Flow Runner](flows.md) (`python -m flows.runner`).
+[functional API examples](apis.md), [ready-to-run Use Cases](use-cases.md), or end-to-end pipelines using the [Python Flow Runner](flows.md) (`python -m flows.runner`).
 
 `/docs` and `/openapi.json` belong to LiteLLM. The specialized schema is at
 `/specialized/openapi.json`. Plain browser navigation to `/specialized/docs`

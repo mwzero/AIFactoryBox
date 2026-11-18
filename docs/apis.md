@@ -108,6 +108,8 @@ separate call to this API; LiteLLM invokes its own pre-call guardrail.
 | `/specialized/docs`, `/specialized/openapi.json` | Detailed FastAPI contracts (including `/v1/knowledge/*`) | Bearer key at Nginx |
 | `/health` | LiteLLM liveness | Public |
 | `/specialized/health` | FastAPI health through the gateway; does not check its engines | Bearer key at Nginx |
+| `/specialized/status` | Live readiness probe across PostgreSQL (`pgvector`), LiteLLM, Presidio, Docling, Speaches and Piper | Bearer key at Nginx |
+| `/console/` | Lightweight Operations Console UI (Status, Knowledge Base Manager, RAG Tester, Privacy Sandbox) | Public HTML shell; all API actions require Bearer key |
 
 Obtain the detailed schema using a bearer-capable client:
 

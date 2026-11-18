@@ -111,6 +111,24 @@ general_settings:
     headers: {}
     forward_headers: true
     merge_query_params: true
+  - path: /console
+    target: http://orchestrator:8080/console
+    auth: false
+    methods:
+    - GET
+    headers: {}
+  - path: /console/
+    target: http://orchestrator:8080/console/
+    auth: false
+    methods:
+    - GET
+    headers: {}
+  - path: /specialized/status
+    target: http://orchestrator:8080/status
+    auth: false
+    methods:
+    - GET
+    headers: {}
   - path: /specialized/docs
     target: http://orchestrator:8080/docs
     auth: false

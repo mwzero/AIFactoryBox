@@ -43,9 +43,9 @@ jobs:
       - name: Lint Code with Flake8
         run: |
           # Interrompe la build se ci sono errori di sintassi o variabili non definite
-          flake8 orchestrator/ minimal/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 orchestrator/ minimal/ flows/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # Warning non bloccanti per lo stile del codice
-          flake8 orchestrator/ minimal/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          flake8 orchestrator/ minimal/ flows/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
   build-and-deploy-check:
     name: 🐳 Docker Compose & Deployment Verification

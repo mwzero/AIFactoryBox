@@ -42,6 +42,7 @@ See [Security](security.md).
 | LiteLLM Proxy | Model routing, configured controls and native pass-through | Internal port 4000 |
 | FastAPI orchestrator | Specialized adapters, local Tesseract OCR and `/v1/knowledge/*` RAG orchestration | Internal port 8080 |
 | Open WebUI | Chat client | Via Nginx `/` |
+| Operations Console | Lightweight stack readiness, `pgvector` Knowledge Base manager & Presidio sandbox (`orchestrator/console.html`) | Via Nginx `/console/` (API calls require Bearer key) |
 | Presidio analyzer/anonymizer | Detect and mask configured text entities | Internal port 3000 in each container |
 | TEI | Embedding and reranking inference in separate containers | Internal port 80 |
 | Speaches | Whisper transcription runtime | Internal port 8000 |
@@ -55,7 +56,7 @@ the corresponding FastAPI resources through pass-through.
 
 ## Knowledge & Vector Storage Layer (PostgreSQL + `pgvector`)
 
-- **Consolidated Database Engine**: Reuses the existing PostgreSQL instance (`pgvector/pgvector:pg15` on `controlplane-db:5432`) with logical database separation (`litellm_db` for gateway state/audit, `knowledge_db` initialized via `postgres/init/01-init-knowledge.sql` for vector storage).
+- **Consolidated & Self-Provisioned Database Engine**: Reuses the existing PostgreSQL instance (`pgvector/pgvector:pg15` on `controlplane-db:5432`) with logical database separation (`litellm_db` for gateway state/audit, `knowledge_db` for vector storage). Both `knowledge_db` and the `pgvector` schema are created automatically on first connection—even when upgrading an existing volume.
 - **LiteLLM Control Plane Integration**: `/v1/knowledge/ingest` and `/v1/knowledge/search` invoke LiteLLM (`/v1/embeddings` and `/rerank` using aliases `embedding-small` and `rerank-small`) instead of calling backend TEI containers directly. Pass-through `forward_headers: true` propagates the caller's `Authorization` header (with fallback to `LITELLM_SERVICE_KEY`) so token usage, latency, rate limits, and spend are logged per tenant in `litellm_db`.
 
 ## Runtime, image and model
