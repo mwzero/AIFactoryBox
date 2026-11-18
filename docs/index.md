@@ -14,9 +14,10 @@ the document, audio, privacy, local OCR and `pgvector` Knowledge Base adapters.
 2. [Quickstart](quickstart.md): configure and start the existing stack.
 3. [APIs](apis.md): call model, specialized and `/v1/knowledge/*` endpoints with a bearer key.
 4. [Composable Python Flows](flows.md): orchestrate multi-step ingestion, RAG and voice workflows via `flows/`.
-5. [Security](security.md): understand PII masking, header forwarding and Community authentication limits.
-6. [Models](models.md): inspect the actual defaults and their tradeoffs.
-7. [Development](development.md): run checks and distinguish test evidence from full-stack readiness.
+5. [Use Cases & Recipes](use-cases.md): try multi-tenant RAG, PII-safe ingestion and voice workflows right away.
+6. [Security](security.md): understand PII masking, header forwarding and Community authentication limits.
+7. [Models](models.md): inspect the actual defaults and their tradeoffs.
+8. [Development](development.md): run checks and distinguish test evidence from full-stack readiness.
 
 The full gateway targets Docker Compose. The separate [minimal variant](minimal.md)
 provides LiteLLM in Python or Docker with Ollama/Gemma, without a database.

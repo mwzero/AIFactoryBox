@@ -24,7 +24,8 @@ and spend logs. Read the [security boundaries](docs/security.md).
 - [API guide](docs/apis.md): authenticated examples, Knowledge Base RAG endpoints and contract changes.
 - [Model inventory](docs/models.md): current defaults, language tradeoffs and proposed profiles.
 - [Development and validation](docs/development.md): local setup, tests and what has actually been verified.
-- **Python Flow Runner (`flows/`)**: zero-dependency async client SDK (`flows/sdk.py`) and composable pipelines (`ingest-safe`, `ask`, `voice-ask`) in `flows/runner.py`.
+- [Composable Python Flows](docs/flows.md): zero-dependency async client SDK (`flows/sdk.py`) and CLI runner (`flows/runner.py`).
+- [Use Cases & Recipes](docs/use-cases.md): hands-on multi-tenant RAG, PII-safe ingestion, and voice assistant examples.
 
 The current Compose stack includes PostgreSQL (`pgvector`), Open WebUI and specialized engines.
 The independent `minimal/` variant provides LiteLLM + Ollama/Gemma without those

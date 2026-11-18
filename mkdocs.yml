@@ -48,6 +48,7 @@ nav:
   - Minimal Local Gateway: minimal.md
   - APIs: apis.md
   - Composable Python Flows: flows.md
+  - Use Cases & Recipes: use-cases.md
   - Models & Planned Profiles: models.md
   - Deployment & Quickstart: quickstart.md
   - Privacy & Access Control: security.md

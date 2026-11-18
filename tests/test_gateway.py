@@ -356,3 +356,59 @@ def test_knowledge_primitives_pgvector_via_litellm(monkeypatch):
             await runner.cleanup()
 
     asyncio.run(run())
+
+
+def test_knowledge_auto_creates_database_on_missing_catalog(monkeypatch):
+    import asyncpg
+    from orchestrator import main as orch_main
+
+    created_dbs = []
+    pool_calls = []
+
+    class DummyConn:
+        async def execute(self, sql, *args):
+            if sql.startswith("CREATE DATABASE"):
+                created_dbs.append(sql)
+
+        async def fetchval(self, sql, *args):
+            return None
+
+        async def close(self):
+            pass
+
+    class DummyPool:
+        def acquire(self):
+            class Acq:
+                async def __aenter__(self):
+                    return DummyConn()
+
+                async def __aexit__(self, exc_type, exc, tb):
+                    return False
+
+            return Acq()
+
+        async def close(self):
+            pass
+
+    async def fake_create_pool(dsn, min_size=1, max_size=10):
+        pool_calls.append(dsn)
+        if len(pool_calls) == 1:
+            raise asyncpg.InvalidCatalogNameError('database "knowledge_db" does not exist')
+        return DummyPool()
+
+    async def fake_connect(dsn):
+        assert dsn.endswith("/postgres")
+        return DummyConn()
+
+    async def run():
+        monkeypatch.setattr(orch_main, "_db_pool", None)
+        monkeypatch.setattr(orch_main, "KNOWLEDGE_DB_URL", "postgresql://litellm:secret@postgres-audit:5432/knowledge_db")
+        monkeypatch.setattr(orch_main.asyncpg, "create_pool", fake_create_pool)
+        monkeypatch.setattr(orch_main.asyncpg, "connect", fake_connect)
+        pool = await orch_main.get_db_pool()
+        assert pool is not None
+        assert len(pool_calls) == 2
+        assert created_dbs == ['CREATE DATABASE "knowledge_db"']
+        monkeypatch.setattr(orch_main, "_db_pool", None)
+
+    asyncio.run(run())
