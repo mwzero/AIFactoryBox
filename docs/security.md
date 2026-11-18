@@ -52,7 +52,7 @@ Any key accepted by `/v1/models` can invoke the specialized APIs. This is not
 per-endpoint authorization, model-style token budgeting or per-user pass-through
 accounting. Model-key restrictions do not imply equivalent specialized-route
 restrictions. Pass-through guardrails are opt-in and are not configured here.
-The client bearer header is not forwarded to FastAPI by the pass-through.
+For general specialized routes, the client bearer header is not forwarded to FastAPI by the pass-through. For `/v1/knowledge/ingest` and `/v1/knowledge/search`, `forward_headers: true` forwards the caller's bearer token so FastAPI passes it to LiteLLM `/v1/embeddings` and `/rerank` for per-tenant spend and rate-limit enforcement.
 
 ## Credentials, logs and deployment
 
