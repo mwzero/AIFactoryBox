@@ -110,6 +110,26 @@ FastAPI's health handler does not check its engine dependencies. Continue with
 does not supply a bearer key; use authenticated API tooling to retrieve the
 schema. Do not publish internal ports to make documentation easier to access.
 
+
+## Cloud VPS Deployment (OVHcloud + Groq & Hugging Face SaaS)
+
+To run AIFactoryBox on a standard CPU VPS (such as OVHcloud VPS-2 with 4 vCPU / 8 GB RAM) without local inference containers (`tei-embeddings`, `tei-rerank`, `faster-whisper`), use the cloud override profile (`docker-compose.cloud.yml` + `config/litellm-config.cloud.yaml`):
+
+1. Add `GROQ_API_KEY` and `HUGGINGFACE_API_KEY` to `.env`.
+2. Start the cloud stack:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.cloud.yml up -d --build
+```
+
+This routes `chat-small` and audio transcription (`whisper-small`) to **Groq**, and multilingual 1024-dimensional embeddings (`BAAI/bge-m3`) and reranking (`BAAI/bge-reranker-v2-m3`) to **Hugging Face Inference API**, while keeping Nginx auth, Microsoft Presidio PII masking, PostgreSQL `pgvector`, and the Operations Console (`/console/`) self-hosted.
+
+When you point a domain to your VPS IP, enable automatic Let's Encrypt HTTPS with:
+
+```bash
+DOMAIN=ai.yourdomain.it docker compose -f docker-compose.yml -f docker-compose.cloud.yml --profile tls up -d
+```
+
 ## Troubleshooting
 
 | Symptom | What to inspect |
