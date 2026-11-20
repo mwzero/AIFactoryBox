@@ -19,7 +19,7 @@ and spend logs. Read the [security boundaries](docs/security.md).
 ## Start here
 
 - [Minimal local gateway](minimal/README.md): LiteLLM in Python or Docker, Ollama and Gemma 3 1B, without a database.
-- [Quickstart](docs/quickstart.md): configure credentials, start Compose, create a key and check services.
+- [Quickstart](docs/quickstart.md): configure credentials, start Compose (local or OVHcloud + Groq/Hugging Face SaaS via `docker-compose.cloud.yml`), create a key and check services.
 - [Architecture](docs/architecture.md): request paths, component responsibilities and runtime/model distinction.
 - [API guide](docs/apis.md): authenticated examples, Knowledge Base RAG endpoints and contract changes.
 - [Model inventory](docs/models.md): current defaults, language tradeoffs and proposed profiles.

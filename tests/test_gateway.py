@@ -433,3 +433,47 @@ def test_operations_console_and_status_endpoint(monkeypatch):
         data = res_status.json()
         assert "orchestrator" in data["services"]
         assert data["services"]["litellm_proxy"]["status"] == "ok"
+
+
+def test_cloud_profile_whisper_saas_and_1024_dim(monkeypatch):
+    from aiohttp import web
+    from orchestrator import main as orch_main
+
+    async def run():
+        received = {}
+
+        async def fake_litellm_audio(request):
+            received["auth"] = request.headers.get("Authorization")
+            form = await request.post()
+            received["model"] = form["model"]
+            received["language"] = form["language"]
+            return web.json_response({"text": "Trascrizione via Groq SaaS"})
+
+        server = web.Application()
+        server.router.add_post("/v1/audio/transcriptions", fake_litellm_audio)
+        runner = web.AppRunner(server)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+
+        monkeypatch.setattr(orch_main, "LITELLM_BASE_URL", f"http://127.0.0.1:{port}")
+        monkeypatch.setattr(orch_main, "WHISPER_URL", f"http://127.0.0.1:{port}/v1/audio/transcriptions")
+        monkeypatch.setattr(orch_main, "DEFAULT_WHISPER_MODEL", "whisper-small")
+
+        try:
+            with TestClient(app) as client:
+                res = client.post(
+                    "/v1/audio/transcribe?language=it",
+                    headers={"Authorization": "Bearer sk-cloud-tenant"},
+                    files={"file": ("voice.wav", b"RIFF-audio", "audio/wav")},
+                )
+                assert res.status_code == 200, res.text
+                assert res.json()["text"] == "Trascrizione via Groq SaaS"
+                assert received["auth"] == "Bearer sk-cloud-tenant"
+                assert received["model"] == "whisper-small"
+                assert received["language"] == "it"
+        finally:
+            await runner.cleanup()
+
+    asyncio.run(run())

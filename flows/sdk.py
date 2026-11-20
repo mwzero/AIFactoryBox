@@ -76,15 +76,18 @@ class AIFactoryClient:
     async def transcribe(
         self,
         audio_path: Union[str, Path],
-        model: str = "Systran/faster-whisper-tiny",
+        model: Optional[str] = None,
         language: str = "it",
     ) -> str:
         path = Path(audio_path)
+        params: Dict[str, Any] = {"language": language}
+        if model:
+            params["model"] = model
         async with self._client(timeout=120.0) as client:
             with path.open("rb") as fh:
                 resp = await client.post(
                     "/v1/audio/transcribe",
-                    params={"model": model, "language": language},
+                    params=params,
                     files={"file": (path.name, fh)},
                 )
             resp.raise_for_status()

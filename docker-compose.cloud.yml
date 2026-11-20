@@ -1,0 +1,62 @@
+# Cloud VPS override (OVHcloud / Ubuntu 24.04) with Groq & Hugging Face SaaS inference.
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.cloud.yml up -d --build
+#
+# Optional HTTPS with automatic Let's Encrypt certificate once a domain is configured:
+#   DOMAIN=ai.yourdomain.it docker compose -f docker-compose.yml -f docker-compose.cloud.yml --profile tls up -d --build
+
+services:
+  litellm-proxy:
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:?Set GROQ_API_KEY in .env}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:?Set HUGGINGFACE_API_KEY in .env}
+    volumes:
+      - ./config/litellm-config.cloud.yaml:/app/config.yaml:ro
+    depends_on:
+      - postgres-audit
+      - presidio-analyzer
+      - presidio-anonymizer
+      - orchestrator
+
+  orchestrator:
+    environment:
+      - DEFAULT_VECTOR_SIZE=1024
+      - WHISPER_URL=http://litellm-proxy:4000/v1/audio/transcriptions
+      - DEFAULT_WHISPER_MODEL=whisper-small
+    depends_on:
+      - docling-service
+      - presidio-analyzer
+      - presidio-anonymizer
+      - piper-tts
+      - postgres-audit
+
+  # Move heavy local inference runtimes to `local-only` profile so they are NOT started on the cloud VPS
+  tei-embeddings:
+    profiles: ["local-only"]
+  tei-rerank:
+    profiles: ["local-only"]
+  faster-whisper:
+    profiles: ["local-only"]
+
+  # Optional automatic HTTPS reverse proxy (activate with `--profile tls` when DOMAIN is set)
+  caddy-tls:
+    image: caddy:2-alpine
+    container_name: ai-gateway-tls
+    profiles: ["tls"]
+    ports:
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:?Set DOMAIN to enable automatic HTTPS}
+    command: caddy reverse-proxy --from ${DOMAIN} --to http://nginx:80
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - nginx
+    networks:
+      - ai-gateway-net
+    restart: unless-stopped
+
+volumes:
+  caddy_data: null
+  caddy_config: null

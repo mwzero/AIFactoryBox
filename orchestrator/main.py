@@ -25,6 +25,7 @@ DOCLING_URL = os.getenv("DOCLING_URL", "http://engine-doc-extraction:5000/proces
 PRESIDIO_ANALYZER_URL = os.getenv("PRESIDIO_ANALYZER_URL", "http://pii-presidio-analyzer:3000/analyze")
 PRESIDIO_ANONYMIZER_URL = os.getenv("PRESIDIO_ANONYMIZER_URL", "http://pii-presidio-anonymizer:3000/anonymize")
 WHISPER_URL = os.getenv("WHISPER_URL", "http://engine-speech-transcribe:8000/v1/audio/transcriptions")
+DEFAULT_WHISPER_MODEL = os.getenv("DEFAULT_WHISPER_MODEL", "Systran/faster-whisper-tiny")
 TTS_URL = os.getenv("TTS_URL", "http://engine-tts:5500/api/tts")
 
 # LiteLLM Proxy gateway configuration (per tracciamento audit, quote e disaccoppiamento modelli)
@@ -34,6 +35,7 @@ LITELLM_RERANK_MODEL = os.getenv("LITELLM_RERANK_MODEL", "rerank-small")
 LITELLM_SERVICE_KEY = os.getenv("LITELLM_SERVICE_KEY", "")
 
 KNOWLEDGE_DB_URL = os.getenv("KNOWLEDGE_DB_URL", "")
+DEFAULT_VECTOR_SIZE = int(os.getenv("DEFAULT_VECTOR_SIZE", "384"))
 
 _db_pool: Optional[asyncpg.Pool] = None
 
@@ -190,7 +192,7 @@ class TTSRequest(BaseModel):
 
 class CollectionCreateRequest(BaseModel):
     name: str = Field(..., pattern="^[a-zA-Z0-9_-]{1,63}$", examples=["enterprise_docs"])
-    vector_size: int = Field(default=384, ge=1, le=8192, examples=[384])
+    vector_size: int = Field(default=DEFAULT_VECTOR_SIZE, ge=1, le=8192, examples=[1024])
     distance: str = Field(default="Cosine", examples=["Cosine"])
 
 class KnowledgeSearchRequest(BaseModel):
@@ -322,9 +324,16 @@ async def stack_status():
         "presidio_analyzer": f"{base_of(PRESIDIO_ANALYZER_URL)}/health",
         "presidio_anonymizer": f"{base_of(PRESIDIO_ANONYMIZER_URL)}/health",
         "docling": f"{base_of(DOCLING_URL)}/health",
-        "whisper_speaches": f"{base_of(WHISPER_URL)}/health",
         "piper_tts": f"{base_of(TTS_URL)}/",
     }
+    if WHISPER_URL.startswith(LITELLM_BASE_URL):
+        services["whisper_transcription"] = {
+            "status": "ok",
+            "detail": f"SaaS via LiteLLM ({DEFAULT_WHISPER_MODEL})",
+            "latency_ms": 0.0,
+        }
+    else:
+        targets["whisper_speaches"] = f"{base_of(WHISPER_URL)}/health"
 
     async with httpx.AsyncClient(timeout=3.0, trust_env=False) as client:
         results = await asyncio.gather(*(_probe_http(client, u) for u in targets.values()))
@@ -373,24 +382,31 @@ async def anonymize_text(payload: AnonymizeRequest):
     except Exception as e:
         handle_downstream_error("Presidio", e)
 
-# 3. Speech Transcription
-@app.post("/v1/audio/transcribe", summary="Trascrive file audio/video con Faster-Whisper")
+# 3. Speech Transcription (Locale Speaches oppure SaaS Groq Whisper via LiteLLM)
+@app.post("/v1/audio/transcribe", summary="Trascrive file audio/video con Whisper (locale o SaaS via LiteLLM)")
 async def transcribe_audio(
+    request: Request,
     file: UploadFile = File(...),
-    model: str = Query(default="Systran/faster-whisper-tiny"),
+    model: Optional[str] = Query(default=None),
     language: Optional[str] = Query(default="it")
 ):
+    resolved_model = model or DEFAULT_WHISPER_MODEL
+    headers = {}
+    if WHISPER_URL.startswith(LITELLM_BASE_URL):
+        auth = build_litellm_headers(request).get("Authorization")
+        if auth:
+            headers["Authorization"] = auth
     try:
         content = await file.read()
         async with httpx.AsyncClient(timeout=120.0) as client:
             files = {"file": (file.filename, content, file.content_type)}
-            data = {"model": model, "language": language}
-            response = await client.post(WHISPER_URL, files=files, data=data)
+            data = {"model": resolved_model, "language": language}
+            response = await client.post(WHISPER_URL, headers=headers, files=files, data=data)
             if response.status_code != 200:
                 raise HTTPException(status_code=response.status_code, detail=f"Whisper Error: {response.text}")
             return response.json()
     except Exception as e:
-        handle_downstream_error("Faster-Whisper", e)
+        handle_downstream_error("Whisper", e)
 
 # 6. Text-to-Speech (TTS)
 @app.post("/v1/audio/synthesize", summary="Sintetizza testo in audio con Piper")
