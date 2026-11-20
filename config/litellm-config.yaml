@@ -111,12 +111,94 @@ general_settings:
     headers: {}
     forward_headers: true
     merge_query_params: true
+  - path: /v1/flows/catalog
+    target: http://orchestrator:8080/v1/flows/catalog
+    auth: false
+    methods:
+    - GET
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules
+    target: http://orchestrator:8080/v1/schedules
+    auth: false
+    methods:
+    - GET
+    - POST
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules/{schedule_id}
+    target: http://orchestrator:8080/v1/schedules/{schedule_id}
+    auth: false
+    methods:
+    - DELETE
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules/{schedule_id}/toggle
+    target: http://orchestrator:8080/v1/schedules/{schedule_id}/toggle
+    auth: false
+    methods:
+    - PATCH
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules/{schedule_id}/run-now
+    target: http://orchestrator:8080/v1/schedules/{schedule_id}/run-now
+    auth: false
+    methods:
+    - POST
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
   - path: /console
     target: http://orchestrator:8080/console
     auth: false
     methods:
     - GET
     headers: {}
+  - path: /v1/flows/catalog
+    target: http://orchestrator:8080/v1/flows/catalog
+    auth: false
+    methods:
+    - GET
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules
+    target: http://orchestrator:8080/v1/schedules
+    auth: false
+    methods:
+    - GET
+    - POST
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules/{schedule_id}
+    target: http://orchestrator:8080/v1/schedules/{schedule_id}
+    auth: false
+    methods:
+    - DELETE
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules/{schedule_id}/toggle
+    target: http://orchestrator:8080/v1/schedules/{schedule_id}/toggle
+    auth: false
+    methods:
+    - PATCH
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
+  - path: /v1/schedules/{schedule_id}/run-now
+    target: http://orchestrator:8080/v1/schedules/{schedule_id}/run-now
+    auth: false
+    methods:
+    - POST
+    headers: {}
+    forward_headers: false
+    merge_query_params: true
   - path: /console/
     target: http://orchestrator:8080/console/
     auth: false

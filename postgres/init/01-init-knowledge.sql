@@ -28,3 +28,29 @@ CREATE TABLE IF NOT EXISTS kb_chunks (
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_collection ON kb_chunks(collection_name);
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_document ON kb_chunks(document_id);
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_metadata ON kb_chunks USING gin(metadata);
+
+CREATE TABLE IF NOT EXISTS flow_schedules (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    flow_type TEXT NOT NULL,
+    connector_type TEXT NOT NULL DEFAULT 'email_imap',
+    interval_minutes INTEGER NOT NULL DEFAULT 15,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    config_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    last_run_at TIMESTAMPTZ,
+    last_status TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS flow_runs (
+    id UUID PRIMARY KEY,
+    schedule_id UUID REFERENCES flow_schedules(id) ON DELETE SET NULL,
+    schedule_name TEXT NOT NULL,
+    flow_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    duration_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
+    output_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    executed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_flow_runs_executed_at ON flow_runs(executed_at DESC);

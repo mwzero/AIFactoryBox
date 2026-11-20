@@ -477,3 +477,16 @@ def test_cloud_profile_whisper_saas_and_1024_dim(monkeypatch):
             await runner.cleanup()
 
     asyncio.run(run())
+
+
+def test_flows_catalog_endpoint():
+    with TestClient(app) as client:
+        res = client.get("/v1/flows/catalog")
+        assert res.status_code == 200
+        flows = res.json()["flows"]
+        ids = {f["id"] for f in flows}
+        assert "contract_audit" in ids
+        assert "invoice_reconcile" in ids
+        assert "ingest_safe" in ids
+        contract = next(f for f in flows if f["id"] == "contract_audit")
+        assert "contract_audit_pipeline" in contract["code"]

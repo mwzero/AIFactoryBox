@@ -1,918 +1,913 @@
 <!doctype html>
-<html lang="it" class="dark">
+<html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIFactoryBox — Operations &amp; Flows Console v1.3</title>
-
-  <!-- Typography: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
-          },
-          colors: {
-            obsidian: '#050811',
-            surface: '#0a0f1e',
-            elevated: '#10182d',
-          }
-        }
-      }
-    };
-  </script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIFactoryBox — Operations &amp; Flows Console</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg-obsidian: #050811;
-      --border-hairline: rgba(148, 163, 184, 0.12);
-      --border-strong: rgba(148, 163, 184, 0.22);
+      --bg: #060b16;
+      --sidebar-bg: #0a1122;
+      --topbar-bg: #0b1326;
+      --panel: #0f182e;
+      --panel-elevated: #14203c;
+      --line: #1f2e4d;
+      --line-strong: #2d426e;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #64748b;
+      --blue: #3b82f6;
+      --blue-hover: #2563eb;
+      --blue-soft: rgba(59, 130, 246, 0.14);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.14);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.14);
+      --red: #ef4444;
+      --red-soft: rgba(239, 68, 68, 0.14);
+      --topbar-h: 60px;
+      --sidebar-w: 268px;
     }
 
     * { box-sizing: border-box; }
-
     html, body {
       margin: 0;
       height: 100%;
-      background-color: var(--bg-obsidian);
-      color: #e2e8f0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      -webkit-font-smoothing: antialiased;
+      background: var(--bg);
+      color: var(--text);
+      font: 13.5px/1.55 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       overflow: hidden;
     }
 
-    /* Ambient Workspace Dot-Grid & Radial Glow */
-    .workspace-bg {
-      background-color: #050811;
-      background-image:
-        radial-gradient(ellipse 80% 50% at 50% -15%, rgba(56, 189, 248, 0.11), transparent 65%),
-        radial-gradient(ellipse 60% 45% at 90% 10%, rgba(99, 102, 241, 0.09), transparent 60%),
-        radial-gradient(rgba(148, 163, 184, 0.11) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 24px 24px;
-    }
-
-    /* Glassmorphic Surfaces */
-    .glass-topbar {
-      background: rgba(8, 13, 27, 0.82);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border-hairline);
-    }
-
-    .glass-sidebar {
-      background: rgba(8, 12, 24, 0.92);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-right: 1px solid var(--border-hairline);
-    }
-
-    .panel-card {
-      background: linear-gradient(180deg, rgba(16, 24, 45, 0.78) 0%, rgba(10, 15, 30, 0.88) 100%);
-      border: 1px solid var(--border-hairline);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
-    }
-
-    .panel-card-hover {
-      transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-    }
-    .panel-card-hover:hover {
-      border-color: rgba(96, 165, 250, 0.35);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 12px 28px -10px rgba(37, 99, 235, 0.25);
-    }
-
-    /* Active Navigation Glow */
-    .nav-item {
+    /* TOP BAR */
+    .topbar {
+      height: var(--topbar-h);
+      background: var(--topbar-bg);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      gap: 16px;
       position: relative;
-      transition: all 0.16s ease;
+      z-index: 20;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 240px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 750;
+      font-size: 16.5px;
+      letter-spacing: -0.02em;
+    }
+    .brand-logo span { color: #60a5fa; }
+
+    .env-badge {
+      font-size: 11px;
+      font-weight: 650;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--blue-soft);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .topbar-center {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 560px;
+    }
+
+    .key-box {
+      display: flex;
+      align-items: center;
+      background: #050914;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 3px 6px 3px 10px;
+      flex: 1;
+      gap: 8px;
+    }
+    .key-box label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .key-box input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      width: 100%;
+      outline: none;
+      padding: 4px 0;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .conn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(100, 116, 139, 0.15);
+      border: 1px solid var(--line-strong);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .conn-pill.online {
+      background: var(--emerald-soft);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+    .conn-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .ext-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ext-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .ext-links a:hover {
+      color: #fff;
+      border-color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    /* APP SHELL: SIDEBAR + MAIN */
+    .shell {
+      display: flex;
+      height: calc(100vh - var(--topbar-h));
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px 12px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .nav-section {
+      margin-bottom: 20px;
+    }
+    .nav-section-title {
+      font-size: 10.5px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--dim);
+      padding: 0 10px 8px;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      margin-bottom: 4px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 550;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
     }
     .nav-item.active {
-      background: linear-gradient(90deg, rgba(59, 130, 246, 0.18) 0%, rgba(99, 102, 241, 0.06) 100%);
-      border-color: rgba(59, 130, 246, 0.32);
-      color: #ffffff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      background: var(--blue-soft);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: #fff;
+      font-weight: 650;
     }
-    .nav-item.active::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 7px;
-      bottom: 7px;
-      width: 3px;
-      border-radius: 0 4px 4px 0;
-      background: linear-gradient(180deg, #38bdf8, #6366f1);
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.85;
+      flex-shrink: 0;
+    }
+    .nav-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.22);
+      color: #93c5fd;
+    }
+    .nav-pill.amber {
+      background: var(--amber-soft);
+      color: #fcd34d;
     }
 
-    /* View Transitions */
-    .view-section {
-      display: none;
-      animation: fadeSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    .sidebar-footer {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      font-size: 11.5px;
+      color: var(--dim);
+      padding-left: 8px;
+      padding-right: 8px;
     }
-    .view-section.active {
+    .sidebar-footer code {
+      color: #93c5fd;
+      font-size: 11px;
+    }
+
+    /* MAIN WORKSPACE */
+    .workspace {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px 40px;
+      background: var(--bg);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .view-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .view-header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.015em;
+    }
+    .view-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* CARDS & GRIDS */
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .flows-layout {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .flows-layout, .two-col { grid-template-columns: 1fr; }
+      .sidebar { width: 220px; }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    /* BUTTONS & INPUTS */
+    button.btn {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 7px 13px;
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button.btn:hover { background: var(--blue-hover); }
+    button.btn.sm { padding: 5px 10px; font-size: 12px; }
+    button.btn.secondary {
+      background: var(--panel-elevated);
+      border: 1px solid var(--line-strong);
+      color: var(--text);
+    }
+    button.btn.secondary:hover { border-color: var(--blue); color: #fff; }
+    button.btn.danger {
+      background: var(--red-soft);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    button.btn.danger:hover { background: rgba(239, 68, 68, 0.28); }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: #050914;
+      border: 1px solid var(--line-strong);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font: inherit;
+      outline: none;
+    }
+    input[type="text"]:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+    }
+    textarea {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+    }
+
+    .form-row { margin-bottom: 13px; }
+    .form-row label {
       display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 5px;
     }
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Animated Pipeline Arrow */
-    .flow-arrow-line {
-      background: linear-gradient(90deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.85), rgba(56, 189, 248, 0.25));
-      background-size: 200% 100%;
-      animation: flowPulse 2.4s linear infinite;
-    }
-    @keyframes flowPulse {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    .inline-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
     }
 
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar { width: 7px; height: 7px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.35); }
+    /* FLOWS CATALOG LIST & CODE VIEWER */
+    .flow-list-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.14s;
+    }
+    .flow-list-item:hover {
+      border-color: var(--line-strong);
+      background: var(--panel-elevated);
+    }
+    .flow-list-item.active {
+      border-color: var(--blue);
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .flow-cat-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+    .cat-killer { background: var(--amber-soft); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.35); }
+    .cat-core { background: var(--blue-soft); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.35); }
+    .cat-quick { background: var(--emerald-soft); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.35); }
 
-    /* Python Syntax Highlighting Tokens */
-    .tok-comment { color: #64748b; font-style: italic; }
-    .tok-string  { color: #34d399; }
-    .tok-keyword { color: #c084fc; font-weight: 500; }
-    .tok-type    { color: #38bdf8; }
-    .tok-func    { color: #60a5fa; }
+    .step-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin: 12px 0;
+    }
+    .step-chip {
+      background: #071024;
+      border: 1px solid var(--line-strong);
+      color: #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 550;
+    }
+    .step-arrow { color: var(--blue); font-weight: 700; }
 
-    /* Drag & Drop Zone */
-    .drop-zone {
-      border: 1.5px dashed rgba(148, 163, 184, 0.25);
-      background: rgba(5, 8, 17, 0.55);
-      transition: all 0.18s ease;
+    .code-box {
+      background: #030711;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 12px;
     }
-    .drop-zone:hover, .drop-zone.drag-over {
-      border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.08);
+    .code-header {
+      background: #0b1326;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: #93c5fd;
+    }
+    pre.code-pre {
+      margin: 0;
+      padding: 14px 16px;
+      overflow: auto;
+      max-height: 430px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #e2e8f0;
+      tab-size: 4;
     }
 
-    /* Toggle Switch */
-    .toggle-track {
-      transition: background-color 0.2s ease;
-    }
-    .toggle-thumb {
-      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    input:checked + .toggle-track {
-      background-color: #2563eb;
-    }
-    input:checked + .toggle-track .toggle-thumb {
-      transform: translateX(18px);
+    pre.output {
+      background: #030711;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      padding: 14px;
+      overflow: auto;
+      max-height: 360px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: #bfdbfe;
+      white-space: pre-wrap;
+      margin: 0;
     }
 
-    /* Toast Animation */
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(14px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    .status-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
     }
-    .toast-enter {
-      animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+    .ok { background: var(--emerald-soft); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .err { background: var(--red-soft); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+    th { color: #fff; font-weight: 650; }
+    .muted { color: var(--muted); font-size: 12.5px; }
   </style>
 </head>
-<body class="bg-obsidian text-slate-200 selection:bg-blue-500/30 selection:text-white">
+<body>
 
-  <!-- =========================================================
-       TOP HEADER BAR (64px Glassmorphic)
-       ========================================================= -->
-  <header class="glass-topbar h-16 px-4 lg:px-5 flex items-center justify-between gap-3 relative z-30">
-    <!-- Left: Mobile Toggle + Brand Logo -->
-    <div class="flex items-center gap-3 shrink-0">
-      <button id="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Apri menu"
-        class="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/70 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+  <!-- TOP HEADER BAR -->
+  <header class="topbar">
+    <div class="brand-group">
+      <a class="brand-logo" href="/console/">
+        <svg width="26" height="26" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="#172554"/>
+          <path d="M32 12L50 22.5V43.5L32 54L14 43.5V22.5L32 12Z" stroke="#60a5fa" stroke-width="3.5"/>
+          <path d="M32 12V33M32 33L50 22.5M32 33L14 22.5" stroke="#93c5fd" stroke-width="2.5"/>
+          <circle cx="32" cy="33" r="4.5" fill="#3b82f6"/>
         </svg>
-      </button>
-
-      <a href="/console/" class="flex items-center gap-2.5 group focus:outline-none">
-        <!-- Custom Geometric Cube/Node Logo -->
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-cyan-500/20 border border-blue-400/30 flex items-center justify-center shadow-lg shadow-blue-950/40 group-hover:border-cyan-400/60 transition">
-          <svg class="w-5 h-5" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="logoGrad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#38bdf8"/>
-                <stop offset="0.5" stop-color="#3b82f6"/>
-                <stop offset="1" stop-color="#818cf8"/>
-              </linearGradient>
-            </defs>
-            <path d="M32 8L53 20V44L32 56L11 44V20L32 8Z" stroke="url(#logoGrad)" stroke-width="4" stroke-linejoin="round"/>
-            <path d="M32 8V32M32 32L53 20M32 32L11 20" stroke="#93c5fd" stroke-width="2.5" stroke-opacity="0.8"/>
-            <circle cx="32" cy="32" r="5" fill="url(#logoGrad)"/>
-            <circle cx="32" cy="8" r="3" fill="#e0f2fe"/>
-            <circle cx="53" cy="20" r="3" fill="#bae6fd"/>
-            <circle cx="11" cy="20" r="3" fill="#c7d2fe"/>
-          </svg>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-[16px] font-bold tracking-tight text-white">AI<span class="bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">Factory</span>Box</span>
-          <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold tracking-wide uppercase bg-blue-500/10 text-sky-300 border border-blue-400/25">
-            Operations Console v1.3
-          </span>
-        </div>
+        <div>AI<span>Factory</span>Box</div>
       </a>
+      <span class="env-badge">Console v1.2</span>
     </div>
 
-    <!-- Center: Unified Bearer Key Input Bar -->
-    <div class="flex-1 max-w-xl hidden md:flex items-center">
-      <div class="w-full flex items-center gap-1.5 bg-[#04070f] border border-slate-700/60 focus-within:border-sky-500/70 focus-within:ring-2 focus-within:ring-sky-500/15 rounded-xl px-2.5 py-1.5 transition">
-        <svg class="w-4 h-4 text-slate-500 shrink-0 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-        <input id="api-key" type="password" autocomplete="off" placeholder="Gateway Bearer Key (sk-...)"
-          onkeydown="if(event.key==='Enter') saveKey()"
-          class="bg-transparent border-none outline-none text-xs font-mono text-slate-200 placeholder-slate-500 w-full px-1.5 py-1">
-        <button type="button" onclick="toggleKeyVisibility()" title="Mostra/Nascondi chiave"
-          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition">
-          <svg id="eye-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-        <button type="button" onclick="saveKey()"
-          class="px-3 py-1 rounded-lg text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-900/40 transition shrink-0">
-          Connect
-        </button>
-        <button type="button" onclick="clearKey()"
-          class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/80 transition shrink-0">
-          Clear
-        </button>
+    <div class="topbar-center">
+      <div class="key-box">
+        <label for="api-key">Bearer Key</label>
+        <input id="api-key" type="password" placeholder="sk-..." autocomplete="off">
+        <button class="btn sm" onclick="saveKey()">Connect</button>
+        <button class="btn sm secondary" onclick="clearKey()">Clear</button>
       </div>
     </div>
 
-    <!-- Right: Connection Pill + External Quick Links -->
-    <div class="flex items-center gap-2.5 shrink-0">
-      <div id="conn-pill" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800/70 border border-slate-700/60 text-slate-400">
-        <span class="relative flex h-2 w-2">
-          <span id="conn-ping" class="hidden absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-          <span id="conn-dot" class="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
-        </span>
-        <span id="conn-text">Disconnected</span>
-      </div>
-
-      <nav class="hidden xl:flex items-center gap-1.5">
-        <a href="/" target="_blank" rel="noopener"
-          class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition">
-          Open WebUI ↗
-        </a>
-        <a href="/admin/" target="_blank" rel="noopener"
-          class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition">
-          LiteLLM Admin ↗
-        </a>
-        <a href="/specialized/docs" target="_blank" rel="noopener"
-          class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition">
-          Scalar API ↗
-        </a>
+    <div class="topbar-right">
+      <span id="conn-pill" class="conn-pill"><span class="conn-dot"></span><span id="conn-text">Disconnected</span></span>
+      <nav class="ext-links">
+        <a href="/" target="_blank" rel="noopener">Open WebUI ↗</a>
+        <a href="/admin/" target="_blank" rel="noopener">LiteLLM Admin ↗</a>
+        <a href="/specialized/docs" target="_blank" rel="noopener">Scalar API ↗</a>
       </nav>
     </div>
   </header>
 
-  <!-- =========================================================
-       APP SHELL (SIDEBAR + WORKSPACE)
-       ========================================================= -->
-  <div class="flex h-[calc(100vh-64px)] relative">
+  <!-- APP SHELL -->
+  <div class="shell">
 
-    <!-- Mobile Backdrop -->
-    <div id="sidebar-backdrop" onclick="toggleMobileSidebar(false)"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 hidden lg:hidden"></div>
-
-    <!-- LEFT SIDEBAR (276px, collapsible on mobile) -->
-    <aside id="sidebar" class="glass-sidebar w-[276px] shrink-0 flex flex-col justify-between p-3.5 overflow-y-auto fixed lg:static inset-y-0 top-16 lg:top-0 left-0 z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out">
-      <div class="space-y-5">
-
-        <!-- Mobile-only Key Input -->
-        <div class="md:hidden pb-3 border-b border-slate-800/80">
-          <label class="block text-[10.5px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Gateway Bearer Key</label>
-          <div class="flex gap-1.5">
-            <input id="api-key-mobile" type="password" placeholder="sk-..."
-              class="w-full bg-[#04070f] border border-slate-700/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 outline-none focus:border-sky-500">
-            <button onclick="saveKey(true)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white">Go</button>
-          </div>
-        </div>
-
-        <!-- Section 1: PLATFORM & TELEMETRY -->
-        <div>
-          <div class="px-2.5 mb-2 text-[10.5px] font-bold uppercase tracking-[0.11em] text-slate-500">
-            Platform &amp; Telemetry
-          </div>
-          <button class="nav-item active w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/40"
-            data-view="status" onclick="navigate('status', this)">
-            <span class="flex items-center gap-2.5">
-              <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-              </svg>
+    <!-- LEFT SIDEBAR MENU -->
+    <aside class="sidebar">
+      <div>
+        <div class="nav-section">
+          <div class="nav-section-title">Platform &amp; Telemetry</div>
+          <button class="nav-item active" data-view="status" onclick="navigate('status', this)">
+            <span class="nav-item-left">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               <span>Stack Readiness</span>
             </span>
           </button>
         </div>
 
-        <!-- Section 2: FLOWS & KILLER APPS (Visually Emphasized) -->
-        <div class="p-2 rounded-2xl bg-gradient-to-b from-blue-500/[0.06] to-indigo-500/[0.02] border border-blue-500/15">
-          <div class="px-1.5 mb-2 flex items-center justify-between">
-            <span class="text-[10.5px] font-bold uppercase tracking-[0.11em] text-sky-400">Flows &amp; Killer Apps</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></span>
-          </div>
-          <div class="space-y-1">
-            <button class="nav-item w-full flex items-center justify-between gap-2.5 px-2.5 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
-              data-view="flows-catalog" onclick="navigate('flows-catalog', this)">
-              <span class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-                </svg>
-                <span>Flows &amp; Code Inspector</span>
-              </span>
-              <span id="sidebar-flows-count" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/20 text-sky-300 border border-blue-400/30">7</span>
-            </button>
-
-            <button class="nav-item w-full flex items-center justify-between gap-2.5 px-2.5 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50"
-              data-view="flows-runner" onclick="navigate('flows-runner', this)">
-              <span class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
-                <span>Killer App Runner</span>
-              </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider bg-amber-500/15 text-amber-300 border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.3)]">LIVE</span>
-            </button>
-          </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Flows &amp; Killer Apps</div>
+          <button class="nav-item" data-view="flows-catalog" onclick="navigate('flows-catalog', this)">
+            <span class="nav-item-left">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Flows &amp; Code Inspector</span>
+            </span>
+            <span class="nav-pill" id="flows-count-badge">7</span>
+          </button>
+          <button class="nav-item" data-view="flows-runner" onclick="navigate('flows-runner', this)">
+            <span class="nav-item-left">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Killer App Runner</span>
+            </span>
+            <span class="nav-pill amber">LIVE</span>
+          </button>
+          <button class="nav-item" data-view="schedules" onclick="navigate('schedules', this); loadSchedules();">
+            <span class="nav-item-left">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Automations &amp; Schedules</span>
+            </span>
+            <span class="nav-pill" style="background:var(--emerald-soft);color:#6ee7b7;">CRON</span>
+          </button>
         </div>
 
-        <!-- Section 3: DATA & GOVERNANCE -->
-        <div>
-          <div class="px-2.5 mb-2 text-[10.5px] font-bold uppercase tracking-[0.11em] text-slate-500">
-            Data &amp; Governance
-          </div>
-          <div class="space-y-1">
-            <button class="nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/40"
-              data-view="knowledge" onclick="navigate('knowledge', this)">
-              <span class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-                </svg>
-                <span>Knowledge Base (pgvector)</span>
-              </span>
-            </button>
-
-            <button class="nav-item w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border border-transparent text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/40"
-              data-view="privacy" onclick="navigate('privacy', this)">
-              <span class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-                <span>Privacy Sandbox (Presidio)</span>
-              </span>
-            </button>
-          </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Data &amp; Privacy Governance</div>
+          <button class="nav-item" data-view="knowledge" onclick="navigate('knowledge', this)">
+            <span class="nav-item-left">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              <span>Knowledge Base (pgvector)</span>
+            </span>
+          </button>
+          <button class="nav-item" data-view="privacy" onclick="navigate('privacy', this)">
+            <span class="nav-item-left">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Privacy Sandbox (Presidio)</span>
+            </span>
+          </button>
         </div>
       </div>
 
-      <!-- Sidebar Footer: Architecture Card -->
-      <div class="mt-6 p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11.5px] space-y-2">
-        <div class="flex items-center justify-between text-slate-400">
-          <span class="font-semibold text-slate-300">Architecture Profile</span>
-          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">EU / GDPR</span>
-        </div>
-        <div class="space-y-1 text-slate-500 font-mono text-[11px]">
-          <div class="flex justify-between gap-2"><span>Ingress:</span><span class="text-sky-300">Nginx → LiteLLM</span></div>
-          <div class="flex justify-between gap-2"><span>Vector DB:</span><span class="text-cyan-300">pgvector (1024-dim)</span></div>
-          <div class="flex justify-between gap-2"><span>PII Shield:</span><span class="text-emerald-300">Presidio (IT/EN)</span></div>
-        </div>
+      <div class="sidebar-footer">
+        <div>Ingress: <code>Nginx → LiteLLM</code></div>
+        <div style="margin-top:4px;">Vector Store: <code>PostgreSQL pgvector</code></div>
       </div>
     </aside>
 
-    <!-- =========================================================
-         CENTRAL WORKSPACE
-         ========================================================= -->
-    <main class="workspace-bg flex-1 overflow-y-auto px-5 py-6 lg:px-8 lg:py-7">
-      <div class="max-w-[1380px] mx-auto">
+    <!-- CENTRAL BODY WORKSPACE -->
+    <main class="workspace">
 
-        <!-- =====================================================
-             VIEW 1: STACK READINESS
-             ===================================================== -->
-        <section id="view-status" class="view-section active space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
-            <div>
-              <h1 class="text-xl font-bold text-white tracking-tight">System &amp; Engine Readiness</h1>
-              <p class="text-sm text-slate-400 mt-1">Telemetria live dal FastAPI Orchestrator verso PostgreSQL <code class="font-mono text-xs text-sky-300">pgvector</code>, Presidio, LiteLLM e provider SaaS.</p>
-            </div>
-            <div class="flex items-center gap-2.5 flex-wrap">
-              <button id="demo-telemetry-btn" onclick="toggleDemoTelemetry()"
-                class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/70 transition flex items-center gap-2">
-                <span id="demo-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
-                <span id="demo-btn-label">Simulate Demo Telemetry</span>
-              </button>
-              <button onclick="loadStatus()"
-                class="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-950/50 transition flex items-center gap-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Refresh Probe
-              </button>
-            </div>
+      <!-- VIEW 1: STACK READINESS -->
+      <section id="view-status" class="view active">
+        <div class="view-header">
+          <div>
+            <h1>System &amp; Engine Readiness</h1>
+            <p>Monitoraggio live dal FastAPI Orchestrator verso PostgreSQL <code>pgvector</code>, Presidio, LiteLLM e provider SaaS.</p>
           </div>
+          <button class="btn" onclick="loadStatus()">Refresh Probe</button>
+        </div>
+        <div id="status-grid" class="grid-cards">
+          <div class="card">
+            <h3>Connessione al Gateway</h3>
+            <p class="muted">Inserisci la tua <strong>Gateway Bearer Key</strong> nella barra superiore e clicca <strong>Connect</strong> per interrogare i servizi interni.</p>
+          </div>
+        </div>
+      </section>
 
-          <!-- Top KPI Summary Row -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div class="panel-card rounded-2xl p-4 flex items-center justify-between">
+      <!-- VIEW 2: FLOWS CATALOG & CODE INSPECTOR -->
+      <section id="view-flows-catalog" class="view">
+        <div class="view-header">
+          <div>
+            <h1>Composable Python Flows &amp; Killer Apps</h1>
+            <p>Esplora l'architettura, gli step della pipeline, il comando CLI e il codice sorgente reale di <code>flows/pipelines/*.py</code>.</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn secondary" onclick="loadFlowsCatalog()">Reload Catalog</button>
+            <button class="btn" onclick="launchSelectedFlowInRunner()">Test Flow in Runner →</button>
+          </div>
+        </div>
+
+        <div class="flows-layout">
+          <!-- Left column: list of flows -->
+          <div id="flows-list-container"></div>
+
+          <!-- Right column: flow inspector -->
+          <div class="card" id="flow-detail-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
               <div>
-                <div class="text-xs font-medium text-slate-400">Services Online</div>
-                <div id="kpi-services" class="text-2xl font-bold text-white mt-1 font-mono">— / —</div>
+                <span id="detail-badge" class="flow-cat-badge cat-killer">Killer App</span>
+                <h2 id="detail-title" style="margin:2px 0 6px; font-size:18px; color:#fff;">Select a flow</h2>
+                <p id="detail-summary" class="muted" style="margin:0;"></p>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              </div>
+              <code id="detail-filename" style="color:#93c5fd; font-size:12px;"></code>
             </div>
 
-            <div class="panel-card rounded-2xl p-4 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-slate-400">Vector Collections</div>
-                <div id="kpi-collections" class="text-2xl font-bold text-white mt-1 font-mono">0</div>
-              </div>
-              <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-              </div>
+            <div style="margin-top:14px;">
+              <div style="font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Execution Pipeline Steps</div>
+              <div id="detail-steps" class="step-chain"></div>
             </div>
 
-            <div class="panel-card rounded-2xl p-4 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-slate-400">Indexed Chunks</div>
-                <div id="kpi-chunks" class="text-2xl font-bold text-white mt-1 font-mono">0</div>
+            <div class="code-box">
+              <div class="code-header">
+                <span>CLI Quick Execution</span>
+                <button class="btn sm secondary" onclick="copyText('detail-cli')">Copy CLI</button>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              </div>
+              <pre id="detail-cli" class="code-pre" style="max-height:70px; color:#6ee7b7;"></pre>
             </div>
 
-            <div class="panel-card rounded-2xl p-4 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-slate-400">Registered Flows</div>
-                <div id="kpi-flows" class="text-2xl font-bold text-white mt-1 font-mono">7</div>
+            <div class="code-box">
+              <div class="code-header">
+                <span id="detail-code-title">Python Source Code</span>
+                <button class="btn sm secondary" onclick="copyText('detail-code')">Copy Python Code</button>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              </div>
+              <pre id="detail-code" class="code-pre"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: KILLER APP RUNNER -->
+      <section id="view-flows-runner" class="view">
+        <div class="view-header">
+          <div>
+            <h1>Killer App Interactive Runner</h1>
+            <p>Esegui dal vivo le pipeline multi-step combinando OCR/Docling, mascheramento Presidio, <code>pgvector</code> RAG e LLM.</p>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>Configurazione Esecuzione</h3>
+            <div class="form-row">
+              <label>Scenario / Pipeline</label>
+              <select id="flow-mode" onchange="toggleFlowInputs()">
+                <option value="contract">Killer App 1: Contract &amp; Compliance Guardian (PII Mask + Playbook Audit)</option>
+                <option value="invoice">Killer App 2: Invoice Zero-Touch Reconciliation (OCR/Doc + Contract Match)</option>
+                <option value="meeting">Quick Flow: Meeting Minutes from Audio (Whisper + PII Mask + Action Items)</option>
+                <option value="rag">Core Pipeline: Grounded RAG Q&amp;A (Search + Rerank + Cited Answer)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Target Collection (<code>pgvector</code>)</label>
+              <input id="search-col" type="text" value="enterprise_docs">
+            </div>
+            <div class="form-row">
+              <label>Metadata Filter (opzionale JSON, es. <code>{"tenant":"legal"}</code>)</label>
+              <input id="search-filter" type="text" placeholder='{"tenant":"default"}'>
+            </div>
+            <div class="form-row" id="flow-file-row">
+              <label id="flow-file-label">File Documento / Scansione / Audio</label>
+              <input id="flow-file" type="file">
+            </div>
+            <div class="form-row" id="flow-text-row">
+              <label id="flow-text-label">Oppure incolla il testo del documento / domanda</label>
+              <textarea id="search-query" rows="5" placeholder="Incolla qui il testo del contratto da verificare rispetto alle policy della collection..."></textarea>
+            </div>
+            <div class="form-row inline-check" id="flow-rerank-row">
+              <input id="search-rerank" type="checkbox" checked>
+              <label for="search-rerank" style="margin:0; color:var(--text);">Abilita reranking semantico via LiteLLM (<code>rerank-small</code>)</label>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn secondary" id="btn-search-only" style="display:none;" onclick="runSearchOnly()">Search Chunks Only</button>
+              <button class="btn" onclick="runSelectedFlow()">▶ Esegui Pipeline</button>
             </div>
           </div>
 
-          <!-- Offline / Info Banner -->
-          <div id="offline-banner" class="panel-card rounded-2xl p-4 border-sky-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-start gap-3">
-              <div class="p-2 rounded-lg bg-sky-500/15 text-sky-400 shrink-0 mt-0.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-white">Modalità Standalone / In attesa di connessione</div>
-                <p class="text-xs text-slate-400 mt-0.5">Inserisci la tua <strong>Gateway Bearer Key</strong> nella barra superiore e clicca <strong>Connect</strong> per eseguire il probe su <code class="font-mono text-sky-300">/specialized/status</code>, oppure attiva la telemetria simulata per visualizzare l'anteprima live.</p>
-              </div>
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3 style="margin:0;">Output Esecuzione &amp; Audit</h3>
+              <button class="btn sm secondary" onclick="copyText('rag-out')">Copy Output</button>
             </div>
-            <button onclick="toggleDemoTelemetry(true)"
-              class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/30 transition shrink-0">
-              Preview Demo Live →
-            </button>
+            <pre id="rag-out" class="output" style="min-height:360px;">Pronto. Seleziona uno scenario e avvia l'esecuzione.</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: KNOWLEDGE BASE -->
+      <section id="view-knowledge" class="view">
+        <div class="view-header">
+          <div>
+            <h1>Knowledge Base Manager (<code>pgvector</code>)</h1>
+            <p>Gestisci le collection vettoriali su <code>knowledge_db</code> e indicizza documenti con sanificazione PII preventiva.</p>
+          </div>
+          <button class="btn secondary" onclick="loadCollections()">Refresh Collections</button>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>Active Vector Collections</h3>
+            <p class="muted">Isolamento logico per reparto/cliente con dimensioni vettoriali verificate.</p>
+            <table>
+              <thead>
+                <tr><th>Collection</th><th>Dim</th><th>Chunks</th><th>Action</th></tr>
+              </thead>
+              <tbody id="collections-tbody">
+                <tr><td colspan="4" class="muted">Connetti una Bearer Key per visualizzare le collection.</td></tr>
+              </tbody>
+            </table>
           </div>
 
-          <!-- Service Grid -->
-          <div id="status-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
-        </section>
+          <div class="card">
+            <h3>Ingest Document or Text</h3>
+            <div class="form-row">
+              <label>Collection Name</label>
+              <input id="ingest-col" type="text" value="enterprise_docs">
+            </div>
+            <div class="form-row">
+              <label>Tenant Metadata (JSON)</label>
+              <input id="ingest-meta" type="text" value='{"tenant":"default"}'>
+            </div>
+            <div class="form-row">
+              <label>Upload File (PDF, DOCX, TXT, MD, PNG, JPG)</label>
+              <input id="ingest-file" type="file">
+            </div>
+            <div class="form-row">
+              <label>Raw Text (usato se nessun file è selezionato)</label>
+              <textarea id="ingest-text" rows="4" placeholder="Incolla il testo da spezzare, vettorializzare e indicizzare..."></textarea>
+            </div>
+            <div class="form-row inline-check">
+              <input id="ingest-sanitize" type="checkbox" checked>
+              <label for="ingest-sanitize" style="margin:0; color:var(--text);">Maschera PII via Presidio prima dell'indicizzazione (<code>ingest-safe</code>)</label>
+            </div>
+            <button class="btn" onclick="runIngest()">Ingest into Knowledge Base</button>
+            <pre id="ingest-out" class="output" style="margin-top:12px;">Ready.</pre>
+          </div>
+        </div>
+      </section>
 
-        <!-- =====================================================
-             VIEW 2: FLOWS & CODE INSPECTOR
-             ===================================================== -->
-        <section id="view-flows-catalog" class="view-section space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
-            <div>
-              <h1 class="text-xl font-bold text-white tracking-tight">Flows &amp; Code Inspector</h1>
-              <p class="text-sm text-slate-400 mt-1">Esplora le pipeline Python componibili (<code class="font-mono text-xs text-sky-300">flows/pipelines/*.py</code>), i flussi di esecuzione e i comandi CLI.</p>
+      <!-- VIEW 5: PRIVACY SANDBOX -->
+      <section id="view-privacy" class="view">
+        <div class="view-header">
+          <div>
+            <h1>Privacy Sandbox (Microsoft Presidio)</h1>
+            <p>Verifica il rilevamento e il mascheramento locale delle entità sensibili prima che raggiungano i modelli cloud.</p>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>Input Testo da Analizzare</h3>
+            <div class="form-row">
+              <label>Lingua Analisi</label>
+              <select id="pii-lang">
+                <option value="it" selected>Italiano (it)</option>
+                <option value="en">Inglese (en)</option>
+              </select>
             </div>
-            <div class="flex items-center gap-2.5">
-              <button onclick="loadFlowsCatalog()"
-                class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/70 transition">
-                Reload Catalog
-              </button>
-              <button onclick="launchSelectedFlowInRunner()"
-                class="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-md shadow-amber-950/40 transition">
-                Run in Killer App Runner →
-              </button>
+            <div class="form-row">
+              <label>Testo con dati personali</label>
+              <textarea id="pii-input" rows="6">Il cliente Mario Rossi (mario.rossi@example.com, tel +39 333 1234567) ha autorizzato il bonifico sul conto IBAN IT60X0542811101000000123456.</textarea>
             </div>
+            <button class="btn" onclick="runAnonymize()">Mask PII Entities</button>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Left List + Category Filter Pills -->
-            <div class="lg:col-span-4 space-y-3">
-              <div id="flow-filter-pills" class="flex flex-wrap gap-1.5">
-                <button onclick="setFlowFilter('All')" data-filter="All"
-                  class="flow-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition">All</button>
-                <button onclick="setFlowFilter('Killer App')" data-filter="Killer App"
-                  class="flow-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800 transition">Killer App</button>
-                <button onclick="setFlowFilter('Core Pipeline')" data-filter="Core Pipeline"
-                  class="flow-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800 transition">Core Pipeline</button>
-                <button onclick="setFlowFilter('Quick Flow')" data-filter="Quick Flow"
-                  class="flow-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800 transition">Quick Flow</button>
-              </div>
-              <div id="flows-list-container" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1"></div>
-            </div>
-
-            <!-- Right Detail Pane -->
-            <div class="lg:col-span-8 panel-card rounded-2xl p-5 lg:p-6 space-y-5">
-              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div class="space-y-1.5">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span id="detail-badge" class="px-2.5 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-400/35">Killer App</span>
-                    <code id="detail-filename" class="text-xs font-mono px-2 py-0.5 rounded-md bg-slate-900 text-sky-300 border border-slate-800"></code>
-                  </div>
-                  <h2 id="detail-title" class="text-lg font-bold text-white">Select a flow</h2>
-                  <p id="detail-summary" class="text-sm text-slate-400 leading-relaxed"></p>
-                </div>
-                <button onclick="launchSelectedFlowInRunner()"
-                  class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/30 text-sky-300 border border-blue-400/30 transition shrink-0">
-                  Run in Killer App Runner →
-                </button>
-              </div>
-
-              <!-- Visual Horizontal Pipeline Flow Diagram -->
-              <div class="p-4 rounded-xl bg-[#04070f] border border-slate-800/90">
-                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">Execution Pipeline Diagram</div>
-                <div id="detail-steps" class="flex flex-wrap items-center gap-2"></div>
-              </div>
-
-              <!-- Terminal CLI Card -->
-              <div class="rounded-xl overflow-hidden border border-slate-800 bg-[#03060d]">
-                <div class="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <span class="flex gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full bg-rose-500/70"></span>
-                      <span class="w-2.5 h-2.5 rounded-full bg-amber-500/70"></span>
-                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/70"></span>
-                    </span>
-                    <span class="text-[11px] font-mono text-slate-400 ml-1">CLI Quick Execution</span>
-                  </div>
-                  <button onclick="copyElementText('detail-cli', 'Comando CLI copiato negli appunti')"
-                    class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-                    Copy CLI
-                  </button>
-                </div>
-                <pre id="detail-cli" class="p-3.5 text-xs font-mono text-emerald-300 overflow-x-auto m-0"></pre>
-              </div>
-
-              <!-- Python Source Code Viewer -->
-              <div class="rounded-xl overflow-hidden border border-slate-800 bg-[#03060d]">
-                <div class="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-                  <span id="detail-code-title" class="text-xs font-mono text-sky-300">Python Source Code</span>
-                  <button onclick="copyElementText('detail-code-raw', 'Codice Python copiato negli appunti')"
-                    class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-                    Copy Python
-                  </button>
-                </div>
-                <pre id="detail-code" class="p-4 text-xs font-mono leading-relaxed overflow-auto max-h-[380px] m-0 text-slate-200"></pre>
-                <textarea id="detail-code-raw" class="hidden" readonly></textarea>
-              </div>
-            </div>
+          <div class="card">
+            <h3>Risultato Mascherato &amp; Entità Rilevate</h3>
+            <pre id="pii-out" class="output" style="min-height:240px;">Ready.</pre>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- =====================================================
-             VIEW 3: KILLER APP RUNNER
-             ===================================================== -->
-        <section id="view-flows-runner" class="view-section space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
-            <div>
-              <h1 class="text-xl font-bold text-white tracking-tight">Killer App Interactive Runner</h1>
-              <p class="text-sm text-slate-400 mt-1">Esegui pipeline multi-step dal vivo combinando OCR/Docling, mascheramento Presidio, <code class="font-mono text-xs text-sky-300">pgvector</code> RAG e LLM.</p>
+
+      <!-- VIEW 6: AUTOMATIONS & SCHEDULES -->
+      <section id="view-schedules" class="view">
+        <div class="view-header">
+          <div>
+            <h1>Enterprise Automations &amp; Schedules</h1>
+            <p>Schedula pipeline con connettori aziendali (Email IMAP/PEC, RAG Digest) su PostgreSQL senza Redis/Celery.</p>
+          </div>
+          <button class="btn secondary" onclick="loadSchedules()">Refresh Schedules</button>
+        </div>
+
+        <div class="two-col" style="margin-bottom:18px;">
+          <div class="card">
+            <h3>Nuova Automazione Schedulata</h3>
+            <div class="form-row">
+              <label>Nome Automazione</label>
+              <input id="sched-name" type="text" placeholder="Es. Triage PEC Contratti Fornitori">
             </div>
+            <div class="form-row">
+              <label>Pipeline &amp; Connettore</label>
+              <select id="sched-flow-type">
+                <option value="email_contract_audit">Email IMAP/PEC → Contract &amp; Compliance Guardian</option>
+                <option value="email_invoice_reconcile">Email IMAP/PEC → Invoice Zero-Touch Reconciliation</option>
+                <option value="email_rag_draft">Email IMAP/PEC → Bozza Risposta RAG (Human-in-the-loop)</option>
+                <option value="rag_digest">Scheduled RAG Digest (Riepilogo Periodico KB)</option>
+              </select>
+            </div>
+            <div class="two-col" style="gap:10px;">
+              <div class="form-row">
+                <label>Intervallo (minuti)</label>
+                <input id="sched-interval" type="text" value="15">
+              </div>
+              <div class="form-row">
+                <label>Collection pgvector</label>
+                <input id="sched-col" type="text" value="enterprise_docs">
+              </div>
+            </div>
+            <div class="two-col" style="gap:10px;">
+              <div class="form-row">
+                <label>Tenant (opzionale)</label>
+                <input id="sched-tenant" type="text" placeholder="legal">
+              </div>
+              <div class="form-row">
+                <label>Notifica Email Report (opzionale)</label>
+                <input id="sched-notify" type="text" placeholder="ufficio.legale@azienda.it">
+              </div>
+            </div>
+            <button class="btn" onclick="createSchedule()">+ Crea Automazione</button>
           </div>
 
-          <!-- 4-Step Live Progress Stepper -->
-          <div class="panel-card rounded-2xl p-4">
-            <div id="runner-stepper" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+          <div class="card">
+            <h3>Automazioni Attive (<code>flow_schedules</code>)</h3>
+            <p class="muted">Eseguite automaticamente dal worker <code>flow-scheduler</code> o manualmente con <strong>Run Now</strong>.</p>
+            <table>
+              <thead>
+                <tr><th>Nome / Pipeline</th><th>Ogni</th><th>Stato</th><th>Azioni</th></tr>
+              </thead>
+              <tbody id="schedules-tbody">
+                <tr><td colspan="4" class="muted">Connetti una Bearer Key e clicca Refresh Schedules.</td></tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Left Panel: Configuration -->
-            <div class="lg:col-span-5 panel-card rounded-2xl p-5 space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white">Configurazione Pipeline</h3>
-                <button type="button" id="btn-load-sample" onclick="loadSampleInput()"
-                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-400/30 transition">
-                  ✦ Load Sample Input
-                </button>
-              </div>
+        <div class="card">
+          <h3>Storico Esecuzioni Recenti (<code>flow_runs</code>)</h3>
+          <table>
+            <thead>
+              <tr><th>Timestamp</th><th>Automazione</th><th>Esito</th><th>Durata</th><th>Anteprima Output</th></tr>
+            </thead>
+            <tbody id="runs-tbody">
+              <tr><td colspan="5" class="muted">Nessuna esecuzione registrata.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-              <div>
-                <label class="block text-xs font-semibold text-slate-400 mb-1.5">Scenario / Workflow</label>
-                <select id="flow-mode" onchange="toggleFlowInputs()"
-                  class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none">
-                  <option value="contract">Killer App 1: Contract &amp; Compliance Guardian (PII Mask + Playbook Audit)</option>
-                  <option value="invoice">Killer App 2: Invoice Zero-Touch Reconciliation (OCR/Doc + Contract Match)</option>
-                  <option value="meeting">Quick Flow: Meeting Minutes from Audio (Whisper + PII Mask + Action Items)</option>
-                  <option value="rag">Core Pipeline: Grounded RAG Q&amp;A (Search + Rerank + Cited Answer)</option>
-                </select>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-400 mb-1.5">Target Collection (<code class="font-mono text-sky-300">pgvector</code>)</label>
-                  <input id="search-col" type="text" value="enterprise_docs"
-                    class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 outline-none">
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-400 mb-1.5">Metadata Filter (JSON)</label>
-                  <input id="search-filter" type="text" placeholder='{"tenant":"default"}'
-                    class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 outline-none">
-                </div>
-              </div>
-
-              <!-- Drag & Drop File Upload Zone -->
-              <div id="flow-file-row">
-                <label id="flow-file-label" class="block text-xs font-semibold text-slate-400 mb-1.5">File Documento / Scansione / Audio</label>
-                <div id="runner-drop-zone" onclick="document.getElementById('flow-file').click()"
-                  class="drop-zone rounded-xl p-4 text-center cursor-pointer">
-                  <input id="flow-file" type="file" class="hidden" onchange="updateFileBadge('flow-file', 'runner-file-info')">
-                  <svg class="w-6 h-6 mx-auto text-slate-500 mb-1.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                  </svg>
-                  <div class="text-xs text-slate-300 font-medium">Trascina qui un file o <span class="text-sky-400 underline">sfoglia</span></div>
-                  <div id="runner-file-info" class="text-[11px] text-slate-500 mt-1 font-mono">PDF, DOCX, TXT, PNG, JPG, WAV, MP3</div>
-                </div>
-              </div>
-
-              <!-- Text Input -->
-              <div id="flow-text-row">
-                <label id="flow-text-label" class="block text-xs font-semibold text-slate-400 mb-1.5">Oppure incolla il testo del documento / domanda</label>
-                <textarea id="search-query" rows="5" placeholder="Incolla qui il testo del contratto da verificare rispetto alle policy della collection..."
-                  class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl p-3 text-xs font-mono text-slate-200 outline-none resize-y"></textarea>
-              </div>
-
-              <!-- Rerank Toggle -->
-              <div id="flow-rerank-row" class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                <div>
-                  <div class="text-xs font-semibold text-slate-200">Semantic Reranking (<code class="font-mono text-sky-300">rerank-small</code>)</div>
-                  <div class="text-[11px] text-slate-500">Ri-ordina i chunk recuperati tramite LiteLLM /rerank</div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input id="search-rerank" type="checkbox" checked class="sr-only">
-                  <div class="toggle-track w-10 h-5 bg-slate-700 rounded-full p-0.5">
-                    <div class="toggle-thumb w-4 h-4 bg-white rounded-full shadow"></div>
-                  </div>
-                </label>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="flex flex-wrap gap-2.5 pt-1">
-                <button id="btn-search-only" type="button" onclick="runSearchOnly()" style="display:none;"
-                  class="px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-                  Search Chunks Only
-                </button>
-                <button id="btn-run-flow" type="button" onclick="runSelectedFlow()"
-                  class="flex-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-950/50 transition flex items-center justify-center gap-2">
-                  <span>▶ Esegui Pipeline</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Right Panel: Output & Audit Console -->
-            <div class="lg:col-span-7 panel-card rounded-2xl overflow-hidden flex flex-col">
-              <div class="px-4 py-3 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                  <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">Output Esecuzione &amp; Audit Log</h3>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button onclick="document.getElementById('rag-out').textContent='Console pulita. Pronto per una nuova esecuzione.'"
-                    class="px-2.5 py-1 rounded-md text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
-                    Clear
-                  </button>
-                  <button onclick="copyElementText('rag-out', 'Output copiato negli appunti')"
-                    class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-                    Copy Output
-                  </button>
-                </div>
-              </div>
-              <pre id="rag-out" class="p-4 text-xs font-mono text-sky-100/90 bg-[#03060d] min-h-[470px] max-h-[600px] overflow-auto whitespace-pre-wrap leading-relaxed m-0">Pronto. Seleziona uno scenario, carica un documento o clicca "Load Sample Input" e avvia la pipeline.</pre>
-            </div>
-          </div>
-        </section>
-
-        <!-- =====================================================
-             VIEW 4: KNOWLEDGE BASE (pgvector)
-             ===================================================== -->
-        <section id="view-knowledge" class="view-section space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
-            <div>
-              <h1 class="text-xl font-bold text-white tracking-tight">Knowledge Base (<code class="font-mono text-base text-cyan-300">pgvector</code>)</h1>
-              <p class="text-sm text-slate-400 mt-1">Gestisci le collection vettoriali su <code class="font-mono text-xs text-sky-300">knowledge_db</code> e indicizza documenti con sanificazione PII preventiva.</p>
-            </div>
-            <button onclick="loadCollections()"
-              class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/70 transition">
-              Refresh Collections
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Left Card: Collections Table -->
-            <div class="lg:col-span-6 panel-card rounded-2xl p-5">
-              <div class="flex items-center justify-between mb-4">
-                <div>
-                  <h3 class="text-sm font-bold text-white">Active Vector Collections</h3>
-                  <p class="text-xs text-slate-400 mt-0.5">Isolamento logico per reparto/tenant con controllo dimensioni vettoriali.</p>
-                </div>
-              </div>
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr class="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      <th class="py-2.5 px-3">Collection</th>
-                      <th class="py-2.5 px-3">Dimensions</th>
-                      <th class="py-2.5 px-3">Chunks</th>
-                      <th class="py-2.5 px-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="collections-tbody" class="divide-y divide-slate-800/60 text-xs">
-                    <tr><td colspan="4" class="py-6 text-center text-slate-500">Connetti una Bearer Key per caricare le collection da PostgreSQL.</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Right Card: Ingest Form -->
-            <div class="lg:col-span-6 panel-card rounded-2xl p-5 space-y-4">
-              <div>
-                <h3 class="text-sm font-bold text-white">Ingest Document or Text</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Chunking automatico, vettorizzazione via LiteLLM (<code class="font-mono text-sky-300">embedding-small</code>) e salvataggio su <code class="font-mono text-cyan-300">pgvector</code>.</p>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-400 mb-1.5">Collection Name</label>
-                  <input id="ingest-col" type="text" value="enterprise_docs"
-                    class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 outline-none">
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-400 mb-1.5">Tenant Metadata (JSON)</label>
-                  <input id="ingest-meta" type="text" value='{"tenant":"default"}'
-                    class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 outline-none">
-                </div>
-              </div>
-
-              <!-- Drag & Drop Upload -->
-              <div>
-                <label class="block text-xs font-semibold text-slate-400 mb-1.5">Upload File (PDF, DOCX, TXT, MD, PNG, JPG)</label>
-                <div id="ingest-drop-zone" onclick="document.getElementById('ingest-file').click()"
-                  class="drop-zone rounded-xl p-4 text-center cursor-pointer">
-                  <input id="ingest-file" type="file" class="hidden" onchange="updateFileBadge('ingest-file', 'ingest-file-info')">
-                  <div class="text-xs text-slate-300 font-medium">Trascina un documento qui o <span class="text-sky-400 underline">seleziona file</span></div>
-                  <div id="ingest-file-info" class="text-[11px] text-slate-500 mt-1 font-mono">Nessun file selezionato (verrà usato il testo sotto)</div>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-400 mb-1.5">Raw Text</label>
-                <textarea id="ingest-text" rows="4" placeholder="Incolla il testo da spezzare, vettorializzare e indicizzare..."
-                  class="w-full bg-[#04070f] border border-slate-700/70 focus:border-sky-500 rounded-xl p-3 text-xs font-mono text-slate-200 outline-none"></textarea>
-              </div>
-
-              <!-- Presidio Sanitize Toggle -->
-              <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20">
-                <div>
-                  <div class="text-xs font-semibold text-emerald-200">Sanitize PII via Presidio before indexing (<code class="font-mono">ingest-safe</code>)</div>
-                  <div class="text-[11px] text-slate-400">Rimuove nomi, email, IBAN e telefoni prima di salvare i vettori</div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-                  <input id="ingest-sanitize" type="checkbox" checked class="sr-only">
-                  <div class="toggle-track w-10 h-5 bg-slate-700 rounded-full p-0.5">
-                    <div class="toggle-thumb w-4 h-4 bg-white rounded-full shadow"></div>
-                  </div>
-                </label>
-              </div>
-
-              <button onclick="runIngest()"
-                class="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-950/50 transition">
-                Ingest into Knowledge Base
-              </button>
-
-              <pre id="ingest-out" class="p-3 rounded-xl bg-[#03060d] border border-slate-800 text-xs font-mono text-sky-200 overflow-auto max-h-44 whitespace-pre-wrap m-0">Ready.</pre>
-            </div>
-          </div>
-        </section>
-
-        <!-- =====================================================
-             VIEW 5: PRIVACY SANDBOX (Presidio)
-             ===================================================== -->
-        <section id="view-privacy" class="view-section space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80">
-            <div>
-              <h1 class="text-xl font-bold text-white tracking-tight">Privacy Sandbox (<span class="text-emerald-400">Microsoft Presidio</span>)</h1>
-              <p class="text-sm text-slate-400 mt-1">Verifica il rilevamento e il mascheramento locale delle entità PII prima che i dati raggiungano i modelli cloud.</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Left Input -->
-            <div class="lg:col-span-6 panel-card rounded-2xl p-5 space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white">Input Testo da Analizzare</h3>
-                <select id="pii-lang"
-                  class="bg-[#04070f] border border-slate-700/70 focus:border-emerald-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none">
-                  <option value="it" selected>Italiano (it)</option>
-                  <option value="en">Inglese (en)</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-400 mb-1.5">Testo con dati personali (PII)</label>
-                <textarea id="pii-input" rows="7"
-                  class="w-full bg-[#04070f] border border-slate-700/70 focus:border-emerald-500 rounded-xl p-3.5 text-xs font-mono text-slate-200 leading-relaxed outline-none">Il cliente Mario Rossi (email: mario.rossi@example.com, tel: +39 333 1234567) ha autorizzato il bonifico di 4.500 EUR sul conto IBAN IT60X0542811101000000123456 con carta 4532-0151-1283-0366.</textarea>
-              </div>
-
-              <button onclick="runAnonymize()"
-                class="w-full px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-950/50 transition">
-                Mask PII Entities
-              </button>
-            </div>
-
-            <!-- Right Masked Preview + Raw JSON -->
-            <div class="lg:col-span-6 panel-card rounded-2xl p-5 space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white">Anteprima Mascherata (GDPR Shield)</h3>
-                <span id="pii-count-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">0 entità rilevate</span>
-              </div>
-
-              <div id="pii-visual-preview" class="p-4 rounded-xl bg-[#03060d] border border-slate-800 min-h-[140px] text-sm leading-7 text-slate-300 font-sans">
-                <span class="text-slate-500 text-xs font-mono">Clicca "Mask PII Entities" per visualizzare il testo anonimizzato con evidenziazione delle entità rilevate.</span>
-              </div>
-
-              <!-- Legend -->
-              <div class="flex flex-wrap gap-2 text-[11px]">
-                <span class="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-400/30 font-mono">&lt;PERSON&gt;</span>
-                <span class="px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-300 border border-purple-400/30 font-mono">&lt;EMAIL_ADDRESS&gt;</span>
-                <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-400/30 font-mono">&lt;PHONE_NUMBER&gt;</span>
-                <span class="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300 border border-rose-400/30 font-mono">&lt;IBAN_CODE&gt;</span>
-                <span class="px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 font-mono">&lt;CREDIT_CARD&gt;</span>
-              </div>
-
-              <!-- Collapsible Raw JSON -->
-              <details class="rounded-xl bg-[#03060d] border border-slate-800 overflow-hidden">
-                <summary class="px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white cursor-pointer select-none bg-slate-900/60">
-                  Raw Presidio JSON Response
-                </summary>
-                <pre id="pii-out" class="p-3.5 text-xs font-mono text-sky-200 overflow-auto max-h-60 whitespace-pre-wrap m-0 border-t border-slate-800">Ready.</pre>
-              </details>
-            </div>
-          </div>
-        </section>
-
-      </div>
     </main>
   </div>
 
-  <!-- =========================================================
-       CUSTOM CONFIRM MODAL (No native confirm/alert!)
-       ========================================================= -->
-  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-    <div class="panel-card rounded-2xl max-w-md w-full p-5 space-y-4 border-slate-700/80 shadow-2xl">
-      <div class="flex items-start gap-3">
-        <div class="p-2.5 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/25 shrink-0">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-        </div>
-        <div>
-          <h3 id="confirm-title" class="text-base font-bold text-white">Conferma Eliminazione</h3>
-          <p id="confirm-message" class="text-xs text-slate-400 mt-1 leading-relaxed"></p>
-        </div>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeConfirmModal()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Annulla</button>
-        <button id="confirm-action-btn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition">Elimina</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =========================================================
-       TOAST NOTIFICATION CONTAINER (Bottom-Right)
-       ========================================================= -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"></div>
-
-  <!-- =========================================================
-       APPLICATION JAVASCRIPT
-       ========================================================= -->
   <script>
     const KEY_STORAGE = "aifactorybox_console_key";
 
-    // Embedded fallback catalog containing all 7 real AIFactoryBox flows
+    // Embedded fallback catalog so the Flows Inspector works even if opened directly as file:// without server
     const FALLBACK_FLOWS = [
       {
         id: "contract_audit",
@@ -948,12 +943,7 @@
     )
 
     # 4. Audit comparativo e proposta di redlining
-    audit_report = await client.chat(
-        prompt=build_audit_prompt(policy_hits, sanitized_contract),
-        system=AUDITOR_PROMPT,
-        model=model,
-        temperature=0.1,
-    )
+    audit_report = await client.chat(prompt=..., system=AUDITOR_PROMPT, model=model)
     return {"pii_masked": True, "policies_consulted": len(policy_hits), "audit_report": audit_report}`
       },
       {
@@ -971,7 +961,6 @@
     invoice_text: Optional[str] = None,
     tenant: Optional[str] = None,
     language: str = "it",
-    archive_result: bool = False,
 ) -> Dict[str, Any]:
     # 1. Mascheramento PII prima dell'invio al modello
     sanitized_invoice = await client.anonymize(raw_text, language=language)
@@ -986,12 +975,7 @@
     )
 
     # 3. Verifica anomalie voce per voce
-    reconciliation = await client.chat(
-        prompt=build_reconcile_prompt(reference_hits, sanitized_invoice),
-        system=CONTROLLER_PROMPT,
-        model="chat-small",
-        temperature=0.1,
-    )
+    reconciliation = await client.chat(prompt=..., system=CONTROLLER_PROMPT, model="chat-small")
     return {"references_matched": len(reference_hits), "reconciliation_report": reconciliation}`
       },
       {
@@ -1010,18 +994,8 @@
     language: str = "it",
     voice: str = "it_IT-riccardo-x_low",
 ) -> Dict[str, Any]:
-    # 1. Speech-to-Text via Whisper (Groq SaaS o locale)
     transcript = await client.transcribe(audio_path, language=language)
-
-    # 2. Grounded RAG con filtro tenant e reranking
-    rag_res = await rag_answer_pipeline(
-        client=client,
-        collection=collection,
-        question=transcript,
-        tenant=tenant,
-    )
-
-    # 3. Sintesi vocale della risposta
+    rag_res = await rag_answer_pipeline(client=client, collection=collection, question=transcript, tenant=tenant)
     tts_output = await client.synthesize(text=rag_res["answer"], voice=voice)
     return {"transcript": transcript, "answer": rag_res["answer"], "sources": rag_res["sources"], "audio": tts_output}`
       },
@@ -1033,16 +1007,9 @@
         summary: "Pipeline DLP preventiva: estrae testo da PDF/immagini, sanifica i dati personali con Presidio e indicizza i chunk su pgvector.",
         cli_command: "python -m flows.runner ingest-safe --file ./doc.pdf --collection enterprise_docs --tenant default",
         steps: ["Adaptive Extract (OCR/Docling)", "Presidio Anonymize", "LiteLLM Embeddings", "pgvector Store"],
-        code: `async def safe_ingest_pipeline(
-    client: AIFactoryClient,
-    file_path: Path,
-    collection: str,
-    tenant: str,
-    language: str = "it",
-) -> Dict[str, Any]:
-    # Estrae testo da OCR/Docling e maschera PII prima della vettorizzazione
-    raw_text = await extract_adaptive(client, file_path, language)
-    clean_text = await client.anonymize(raw_text, language=language)
+        code: `async def safe_ingest_pipeline(client: AIFactoryClient, file_path: Path, collection: str, tenant: str) -> Dict[str, Any]:
+    raw_text = await extract_adaptive(client, file_path)
+    clean_text = await client.anonymize(raw_text, language="it")
     return await client.ingest(
         collection=collection,
         text=clean_text,
@@ -1055,26 +1022,11 @@
         title: "Multi-Tenant Grounded RAG",
         category: "Core Pipeline",
         summary: "Retrieval isolato per tenant su pgvector con ri-ordinamento semantico LiteLLM Rerank e citazione obbligatoria delle fonti.",
-        cli_command: "python -m flows.runner ask --collection enterprise_docs --tenant default --question 'Politica di reso?'",
+        cli_command: "python -m flows.runner ask --collection enterprise_docs --tenant default --question '...'",
         steps: ["Query Embedding", "pgvector Metadata Filter", "LiteLLM Rerank", "Cited Chat Completion"],
-        code: `async def rag_answer_pipeline(
-    client: AIFactoryClient,
-    collection: str,
-    question: str,
-    tenant: Optional[str] = None,
-    top_k: int = 3,
-) -> Dict[str, Any]:
-    hits = await client.search(
-        collection=collection,
-        query=question,
-        top_k=top_k,
-        rerank=True,
-        filters={"tenant": tenant} if tenant else None,
-    )
-    answer = await client.chat(
-        prompt=build_grounded_prompt(hits, question),
-        system=GROUNDED_SYSTEM_PROMPT,
-    )
+        code: `async def rag_answer_pipeline(client: AIFactoryClient, collection: str, question: str, tenant: Optional[str] = None) -> Dict[str, Any]:
+    hits = await client.search(collection=collection, query=question, top_k=3, rerank=True, filters={"tenant": tenant} if tenant else None)
+    answer = await client.chat(prompt=build_grounded_prompt(hits, question), system=GROUNDED_SYSTEM_PROMPT)
     return {"answer": answer, "sources": hits}`
       },
       {
@@ -1085,19 +1037,10 @@
         summary: "Analizza documenti o testi e calcola il livello di rischio GDPR con conteggio delle entità mascherate.",
         cli_command: "python -m flows.runner pii-report --file ./export.txt --language it",
         steps: ["Extract Text", "Presidio Scan & Mask", "Entity Risk Scoring"],
-        code: `async def pii_audit_pipeline(
-    client: AIFactoryClient,
-    text: Optional[str] = None,
-    file_path: Optional[Path] = None,
-    language: str = "it",
-) -> Dict[str, Any]:
-    sanitized_text = await client.anonymize(raw_text, language=language)
+        code: `async def pii_audit_pipeline(client: AIFactoryClient, text: Optional[str] = None, file_path: Optional[Path] = None) -> Dict[str, Any]:
+    sanitized_text = await client.anonymize(raw_text, language="it")
     detected_tags = PLACEHOLDER_RE.findall(sanitized_text)
-    return {
-        "gdpr_risk_level": score_risk(len(detected_tags)),
-        "entities_masked_total": len(detected_tags),
-        "sanitized_text": sanitized_text,
-    }`
+    return {"gdpr_risk_level": score_risk(len(detected_tags)), "entities_masked_total": len(detected_tags), "sanitized_text": sanitized_text}`
       },
       {
         id: "meeting_minutes",
@@ -1107,129 +1050,17 @@
         summary: "Trascrive riunioni audio via Whisper, rimuove i nomi dei partecipanti con Presidio ed estrae decisioni e action item.",
         cli_command: "python -m flows.runner meeting-minutes --audio ./sync.mp3 --collection meetings_kb",
         steps: ["Whisper Transcribe", "Presidio PII Mask", "LLM Action Items", "Optional pgvector Index"],
-        code: `async def meeting_minutes_pipeline(
-    client: AIFactoryClient,
-    audio_path: Path,
-    collection: Optional[str] = None,
-    language: str = "it",
-) -> Dict[str, Any]:
-    transcript = await client.transcribe(audio_path, language=language)
-    sanitized_transcript = await client.anonymize(transcript, language=language)
+        code: `async def meeting_minutes_pipeline(client: AIFactoryClient, audio_path: Path, collection: Optional[str] = None) -> Dict[str, Any]:
+    transcript = await client.transcribe(audio_path, language="it")
+    sanitized_transcript = await client.anonymize(transcript, language="it")
     minutes_md = await client.chat(prompt=sanitized_transcript, system=MINUTES_PROMPT)
     return {"sanitized_transcript": sanitized_transcript, "minutes_markdown": minutes_md}`
       }
     ];
 
-    const DEMO_TELEMETRY = {
-      status: "ok",
-      services: {
-        orchestrator:          { status: "ok", detail: "FastAPI v1.2.0 active (OVHcloud VPS)", latency_ms: 0.4 },
-        postgres_pgvector:     { status: "ok", detail: "Connected (3 collections, 412 chunks, 1024-dim)", latency_ms: 4.8 },
-        litellm_proxy:         { status: "ok", detail: "Reachable (HTTP 200) · Groq + HF Routing", latency_ms: 6.2 },
-        presidio_analyzer:     { status: "ok", detail: "Reachable (HTTP 200) · spaCy IT/EN loaded", latency_ms: 14.5 },
-        presidio_anonymizer:   { status: "ok", detail: "Reachable (HTTP 200) · Masking Engine Ready", latency_ms: 8.1 },
-        docling:               { status: "ok", detail: "Reachable (HTTP 200) · PDF/DOCX Extractor", latency_ms: 19.3 },
-        whisper_transcription: { status: "ok", detail: "SaaS via LiteLLM (groq/whisper-large-v3-turbo)", latency_ms: 1.0 },
-        piper_tts:             { status: "ok", detail: "Reachable (HTTP 200) · it_IT-riccardo-x_low", latency_ms: 11.4 }
-      }
-    };
-
-    const SAMPLE_INPUTS = {
-      contract: `CONTRATTO DI FORNITURA SERVIZI CLOUD & CONSULENZA\nTra Alfa Tech S.r.l., rappresentata da Mario Rossi (mario.rossi@alfatech.it, tel. +39 333 9876543) e il Cliente.\n\nArt. 4 - Corrispettivo e Pagamenti: Il pagamento avverrà tramite bonifico bancario su IBAN IT60X0542811101000000123456 entro 15 giorni data fattura.\nArt. 7 - Penali: In caso di ritardo nella consegna, la penale massima a carico del fornitore è fissata al 25% del valore contrattuale.\nArt. 9 - Recesso: Il contratto si rinnova tacitamente per 24 mesi salvo disdetta con 180 giorni di preavviso.`,
-      invoice: `FATTURA ELETTRONICA N. FT-2026-0419\nFornitore: Alfa Tech S.r.l. — Referente: Luigi Verdi (luigi.verdi@alfatech.it)\nOggetto: Licenza Annuale Piattaforma AI + Supporto Enterprise\nImponibile: 12.800,00 EUR | IVA 22%: 2.816,00 EUR | TOTALE: 15.616,00 EUR\nCondizioni di pagamento: Rimessa diretta a vista su IBAN IT60X0542811101000000123456.`,
-      rag: `Quali sono i termini massimi di pagamento e le penali consentite dalle nostre policy aziendali?`
-    };
-
-    const STEPPER_CONFIG = {
-      contract: ["Estrazione Testo", "Presidio PII Mask", "pgvector Policy Search", "LLM Compliance Audit"],
-      invoice:  ["OCR / Estrazione", "Presidio PII Mask", "pgvector Contract Match", "LLM Anomaly Check"],
-      meeting:  ["Whisper Transcribe", "Presidio PII Mask", "LLM Action Items", "Report Completo"],
-      rag:      ["Query Embedding", "pgvector Search", "LiteLLM Rerank", "LLM Cited Answer"]
-    };
-
     let catalogFlows = [...FALLBACK_FLOWS];
-    let activeFlowFilter = "All";
     let selectedFlow = catalogFlows[0];
-    let demoTelemetryActive = false;
 
-    /* =========================================================
-       UTILITIES: TOASTS, CLIPBOARD, ESCAPING, MODAL
-       ========================================================= */
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function showToast(message, type = "info") {
-      const container = document.getElementById("toast-container");
-      const colors = {
-        success: "border-emerald-500/40 bg-emerald-950/90 text-emerald-200",
-        error:   "border-rose-500/40 bg-rose-950/90 text-rose-200",
-        info:    "border-sky-500/40 bg-slate-900/95 text-sky-200"
-      };
-      const icon = type === "success" ? "✓" : (type === "error" ? "✕" : "✦");
-      const toast = document.createElement("div");
-      toast.className = `toast-enter pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md text-xs font-medium ${colors[type] || colors.info}`;
-      toast.innerHTML = `<span class="font-bold text-sm leading-none">${icon}</span><span>${escapeHtml(message)}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = "0";
-        toast.style.transform = "translateY(8px)";
-        toast.style.transition = "all 0.2s ease";
-        setTimeout(() => toast.remove(), 220);
-      }, 3200);
-    }
-
-    function copyTextValue(text, label = "Copiato negli appunti") {
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-        showToast(label, "success");
-      } catch (err) {
-        showToast("Impossibile copiare negli appunti", "error");
-      }
-    }
-
-    function copyElementText(elementId, label) {
-      const el = document.getElementById(elementId);
-      const val = el.tagName === "TEXTAREA" || el.tagName === "INPUT" ? el.value : el.textContent;
-      copyTextValue(val, label);
-    }
-
-    let pendingConfirmCallback = null;
-    function openConfirmModal(title, message, onConfirm) {
-      document.getElementById("confirm-title").textContent = title;
-      document.getElementById("confirm-message").textContent = message;
-      pendingConfirmCallback = onConfirm;
-      const modal = document.getElementById("confirm-modal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-      document.getElementById("confirm-action-btn").onclick = () => {
-        const cb = pendingConfirmCallback;
-        closeConfirmModal();
-        if (cb) cb();
-      };
-    }
-
-    function closeConfirmModal() {
-      const modal = document.getElementById("confirm-modal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-      pendingConfirmCallback = null;
-    }
-
-    /* =========================================================
-       AUTH & NAVIGATION
-       ========================================================= */
     function getKey() {
       return sessionStorage.getItem(KEY_STORAGE) || "";
     }
@@ -1239,48 +1070,18 @@
       return k ? { ...extra, "Authorization": "Bearer " + k } : extra;
     }
 
-    function setConnectionBadge(state, label) {
+    function setConnectionBadge(online, label) {
       const pill = document.getElementById("conn-pill");
-      const dot = document.getElementById("conn-dot");
-      const ping = document.getElementById("conn-ping");
       const txt = document.getElementById("conn-text");
+      pill.classList.toggle("online", online);
       txt.textContent = label;
-
-      if (state === "connected") {
-        pill.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 border border-emerald-500/35 text-emerald-300";
-        dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-400";
-        ping.classList.remove("hidden");
-      } else if (state === "key") {
-        pill.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/15 border border-sky-500/35 text-sky-300";
-        dot.className = "relative inline-flex rounded-full h-2 w-2 bg-sky-400";
-        ping.classList.add("hidden");
-      } else {
-        pill.className = "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800/70 border border-slate-700/60 text-slate-400";
-        dot.className = "relative inline-flex rounded-full h-2 w-2 bg-slate-500";
-        ping.classList.add("hidden");
-      }
     }
 
-    function toggleKeyVisibility() {
-      const input = document.getElementById("api-key");
-      input.type = input.type === "password" ? "text" : "password";
-    }
-
-    function saveKey(fromMobile = false) {
-      const input = document.getElementById(fromMobile ? "api-key-mobile" : "api-key");
-      const val = input.value.trim();
-      if (!val) {
-        showToast("Inserisci una Bearer Key valida (sk-...)", "error");
-        return;
-      }
+    function saveKey() {
+      const val = document.getElementById("api-key").value.trim();
+      if (!val) return;
       sessionStorage.setItem(KEY_STORAGE, val);
-      document.getElementById("api-key").value = val;
-      const mobileInput = document.getElementById("api-key-mobile");
-      if (mobileInput) mobileInput.value = val;
-      demoTelemetryActive = false;
-      updateDemoButtonUI();
-      setConnectionBadge("key", "Key Active");
-      showToast("Bearer Key connessa alla sessione", "success");
+      setConnectionBadge(true, "Key Active");
       loadStatus();
       loadCollections();
       loadFlowsCatalog();
@@ -1289,214 +1090,39 @@
     function clearKey() {
       sessionStorage.removeItem(KEY_STORAGE);
       document.getElementById("api-key").value = "";
-      const mobileInput = document.getElementById("api-key-mobile");
-      if (mobileInput) mobileInput.value = "";
-      setConnectionBadge("disconnected", "Disconnected");
-      showToast("Bearer Key rimossa dalla sessione", "info");
-    }
-
-    function toggleMobileSidebar(forceState) {
-      const sidebar = document.getElementById("sidebar");
-      const backdrop = document.getElementById("sidebar-backdrop");
-      const isOpen = !sidebar.classList.contains("-translate-x-full");
-      const next = typeof forceState === "boolean" ? forceState : !isOpen;
-      if (next) {
-        sidebar.classList.remove("-translate-x-full");
-        backdrop.classList.remove("hidden");
-      } else {
-        sidebar.classList.add("-translate-x-full");
-        backdrop.classList.add("hidden");
-      }
+      setConnectionBadge(false, "Disconnected");
     }
 
     function navigate(viewId, btn) {
       document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
-      document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
       if (btn) {
         btn.classList.add("active");
       } else {
-        const target = document.querySelector(`.nav-item[data-view="${viewId}"]`);
-        if (target) target.classList.add("active");
+        const targetBtn = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+        if (targetBtn) targetBtn.classList.add("active");
       }
-      const section = document.getElementById("view-" + viewId);
-      if (section) section.classList.add("active");
-      toggleMobileSidebar(false);
+      document.getElementById("view-" + viewId).classList.add("active");
     }
 
-    /* =========================================================
-       VIEW 1: STACK READINESS & DEMO TELEMETRY
-       ========================================================= */
-    function updateDemoButtonUI() {
-      const dot = document.getElementById("demo-dot");
-      const label = document.getElementById("demo-btn-label");
-      if (demoTelemetryActive) {
-        dot.className = "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]";
-        label.textContent = "Demo Telemetry: ON";
-      } else {
-        dot.className = "w-2 h-2 rounded-full bg-slate-500";
-        label.textContent = "Simulate Demo Telemetry";
-      }
+    function copyText(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text);
     }
 
-    function toggleDemoTelemetry(forceOn) {
-      demoTelemetryActive = typeof forceOn === "boolean" ? forceOn : !demoTelemetryActive;
-      updateDemoButtonUI();
-      if (demoTelemetryActive) {
-        renderStatusCards(DEMO_TELEMETRY.services);
-        document.getElementById("kpi-collections").textContent = "3";
-        document.getElementById("kpi-chunks").textContent = "412";
-        document.getElementById("offline-banner").classList.add("hidden");
-        setConnectionBadge("connected", "Demo Preview");
-        showToast("Telemetria demo attivata", "info");
-      } else {
-        setConnectionBadge(getKey() ? "key" : "disconnected", getKey() ? "Key Active" : "Disconnected");
-        loadStatus();
-      }
-    }
-
-    function renderStatusCards(services) {
-      const grid = document.getElementById("status-grid");
-      const entries = Object.entries(services || {});
-      const onlineCount = entries.filter(([, info]) => info.status === "ok").length;
-      document.getElementById("kpi-services").textContent = `${onlineCount} / ${entries.length}`;
-
-      grid.innerHTML = entries.map(([name, info]) => {
-        const ok = info.status === "ok";
-        const lat = Number(info.latency_ms ?? 0);
-        const pct = Math.min(100, Math.max(6, Math.round((lat / 120) * 100)));
-        const barColor = !ok ? "bg-rose-500" : (lat < 25 ? "bg-emerald-400" : (lat < 80 ? "bg-amber-400" : "bg-rose-400"));
-
-        return `
-          <div class="panel-card panel-card-hover rounded-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span class="relative flex h-2.5 w-2.5 shrink-0">
-                  ${ok ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>' : ''}
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 ${ok ? 'bg-emerald-400' : 'bg-rose-500'}"></span>
-                </span>
-                <span class="font-mono text-xs font-semibold text-white truncate">${escapeHtml(name)}</span>
-              </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${ok ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}">
-                ${escapeHtml(info.status)}
-              </span>
-            </div>
-            <p class="text-xs text-slate-400 leading-relaxed min-h-[32px]">${escapeHtml(info.detail || "")}</p>
-            <div class="space-y-1">
-              <div class="flex justify-between text-[11px] font-mono">
-                <span class="text-slate-500">Latency</span>
-                <span class="text-slate-300">${lat.toFixed(1)} ms</span>
-              </div>
-              <div class="h-1.5 w-full rounded-full bg-slate-800/90 overflow-hidden">
-                <div class="h-full rounded-full ${barColor} transition-all duration-500" style="width: ${pct}%"></div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    async function loadStatus() {
-      if (demoTelemetryActive) {
-        renderStatusCards(DEMO_TELEMETRY.services);
-        return;
-      }
-      const grid = document.getElementById("status-grid");
-      const banner = document.getElementById("offline-banner");
-      grid.innerHTML = `<div class="panel-card rounded-2xl p-5 col-span-full text-xs text-slate-400 font-mono">Probing /specialized/status...</div>`;
-
-      try {
-        const res = await fetch("/specialized/status", { headers: authHeaders() });
-        if (!res.ok) throw new Error(`HTTP ${res.status} — verifica la Bearer Key o avvia il gateway`);
-        const data = await res.json();
-        banner.classList.add("hidden");
-        setConnectionBadge("connected", "Connected");
-        renderStatusCards(data.services || {});
-      } catch (err) {
-        banner.classList.remove("hidden");
-        document.getElementById("kpi-services").textContent = "0 / 0";
-        grid.innerHTML = `
-          <div class="panel-card rounded-2xl p-5 col-span-full border-rose-500/25 flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-rose-500/15 text-rose-300 border border-rose-500/30">Backend Non Raggiungibile</span>
-              <p class="text-xs text-slate-400 mt-2 font-mono">${escapeHtml(err.message)}</p>
-            </div>
-            <button onclick="toggleDemoTelemetry(true)" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 transition">
-              Attiva Demo Telemetry
-            </button>
-          </div>
-        `;
-      }
-    }
-
-    /* =========================================================
-       VIEW 2: FLOWS & CODE INSPECTOR (Syntax Highlighter)
-       ========================================================= */
-    function highlightPython(code) {
-      const tokenRegex = /(#.*$)|("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\b(async|await|def|return|if|elif|else|for|in|from|import|as|or|and|not|is|None|True|False|raise|try|except|with)\b|\b(Dict|List|Optional|Union|Any|Path|str|int|float|bool|AIFactoryClient)\b|\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\s*\()/gm;
-      let out = "";
-      let lastIndex = 0;
-      let match;
-      while ((match = tokenRegex.exec(code)) !== null) {
-        if (match.index > lastIndex) {
-          out += escapeHtml(code.slice(lastIndex, match.index));
-        }
-        const [full, comment, str, kw, type, fn] = match;
-        if (comment) out += `<span class="tok-comment">${escapeHtml(comment)}</span>`;
-        else if (str) out += `<span class="tok-string">${escapeHtml(str)}</span>`;
-        else if (kw) out += `<span class="tok-keyword">${escapeHtml(kw)}</span>`;
-        else if (type) out += `<span class="tok-type">${escapeHtml(type)}</span>`;
-        else if (fn) out += `<span class="tok-func">${escapeHtml(fn)}</span>`;
-        else out += escapeHtml(full);
-        lastIndex = tokenRegex.lastIndex;
-      }
-      if (lastIndex < code.length) {
-        out += escapeHtml(code.slice(lastIndex));
-      }
-      return out;
-    }
-
-    function categoryBadgeStyle(cat) {
-      if (cat === "Killer App") return "bg-amber-500/15 text-amber-300 border-amber-400/35";
-      if (cat === "Core Pipeline") return "bg-blue-500/15 text-sky-300 border-blue-400/35";
-      return "bg-emerald-500/15 text-emerald-300 border-emerald-400/35";
-    }
-
-    function setFlowFilter(category) {
-      activeFlowFilter = category;
-      document.querySelectorAll(".flow-filter-btn").forEach(btn => {
-        const isAct = btn.dataset.filter === category;
-        btn.className = isAct
-          ? "flow-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm shadow-blue-900/40 transition"
-          : "flow-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800 transition";
-      });
-      renderFlowsCatalog();
-    }
-
+    /* FLOWS CATALOG RENDERING */
     function renderFlowsCatalog() {
-      document.getElementById("sidebar-flows-count").textContent = catalogFlows.length;
-      document.getElementById("kpi-flows").textContent = catalogFlows.length;
-
-      const filtered = activeFlowFilter === "All"
-        ? catalogFlows
-        : catalogFlows.filter(f => f.category === activeFlowFilter);
-
-      if (!filtered.some(f => selectedFlow && f.id === selectedFlow.id) && filtered.length) {
-        selectedFlow = filtered[0];
-      }
-
       const container = document.getElementById("flows-list-container");
-      container.innerHTML = filtered.map(flow => {
-        const isSel = selectedFlow && selectedFlow.id === flow.id;
+      document.getElementById("flows-count-badge").textContent = catalogFlows.length;
+      container.innerHTML = catalogFlows.map(flow => {
+        const isSelected = selectedFlow && selectedFlow.id === flow.id;
+        const badgeClass = flow.category === "Killer App" ? "cat-killer" : (flow.category === "Core Pipeline" ? "cat-core" : "cat-quick");
         return `
-          <div onclick="selectFlow('${flow.id}')"
-            class="p-3.5 rounded-xl border cursor-pointer transition-all ${isSel ? 'bg-blue-500/10 border-sky-400/50 shadow-lg shadow-blue-950/30' : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900'}">
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${categoryBadgeStyle(flow.category)}">${escapeHtml(flow.category)}</span>
-              <span class="text-[10.5px] font-mono text-slate-500">${(flow.steps || []).length} steps</span>
-            </div>
-            <div class="text-sm font-bold text-white">${escapeHtml(flow.title)}</div>
-            <p class="text-xs text-slate-400 mt-1 line-clamp-2">${escapeHtml(flow.summary)}</p>
-            <div class="mt-2 text-[11px] font-mono text-sky-400/80 truncate">${escapeHtml(flow.filename)}</div>
+          <div class="flow-list-item ${isSelected ? 'active' : ''}" onclick="selectFlow('${flow.id}')">
+            <span class="flow-cat-badge ${badgeClass}">${flow.category}</span>
+            <div style="font-weight:700; color:#fff; font-size:14px;">${flow.title}</div>
+            <div class="muted" style="font-size:12px; margin-top:4px;">${flow.summary}</div>
+            <div style="margin-top:6px;"><code style="font-size:11px; color:#93c5fd;">${flow.filename}</code></div>
           </div>
         `;
       }).join("");
@@ -1504,26 +1130,19 @@
       if (selectedFlow) {
         const badge = document.getElementById("detail-badge");
         badge.textContent = selectedFlow.category;
-        badge.className = `px-2.5 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider border ${categoryBadgeStyle(selectedFlow.category)}`;
-        document.getElementById("detail-filename").textContent = selectedFlow.filename;
+        badge.className = "flow-cat-badge " + (selectedFlow.category === "Killer App" ? "cat-killer" : (selectedFlow.category === "Core Pipeline" ? "cat-core" : "cat-quick"));
         document.getElementById("detail-title").textContent = selectedFlow.title;
         document.getElementById("detail-summary").textContent = selectedFlow.summary;
+        document.getElementById("detail-filename").textContent = selectedFlow.filename;
         document.getElementById("detail-cli").textContent = selectedFlow.cli_command;
-        document.getElementById("detail-code-title").textContent = `${selectedFlow.filename} — Python Source`;
-        document.getElementById("detail-code-raw").value = selectedFlow.code;
-        document.getElementById("detail-code").innerHTML = highlightPython(selectedFlow.code);
+        document.getElementById("detail-code-title").textContent = selectedFlow.filename + " (Real Python Implementation)";
+        document.getElementById("detail-code").textContent = selectedFlow.code;
 
-        // Render Horizontal Pipeline Flow Diagram
-        const steps = selectedFlow.steps || [];
-        document.getElementById("detail-steps").innerHTML = steps.map((step, i) => `
-          <div class="flex items-center gap-2">
-            <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-sky-500/30 shadow-[0_0_14px_rgba(56,189,248,0.12)]">
-              <span class="w-5 h-5 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 text-white text-[10.5px] font-bold flex items-center justify-center shrink-0">${i + 1}</span>
-              <span class="text-xs font-semibold text-slate-100 whitespace-nowrap">${escapeHtml(step)}</span>
-            </div>
-            ${i < steps.length - 1 ? '<div class="w-6 h-0.5 flow-arrow-line rounded-full shrink-0"></div>' : ''}
-          </div>
-        `).join("");
+        const stepsEl = document.getElementById("detail-steps");
+        stepsEl.innerHTML = (selectedFlow.steps || []).map((step, idx) => {
+          const arrow = idx < selectedFlow.steps.length - 1 ? '<span class="step-arrow">→</span>' : '';
+          return `<span class="step-chip">${idx + 1}. ${step}</span>${arrow}`;
+        }).join("");
       }
     }
 
@@ -1534,16 +1153,15 @@
 
     function launchSelectedFlowInRunner() {
       const map = {
-        contract_audit: "contract",
-        invoice_reconcile: "invoice",
-        meeting_minutes: "meeting",
-        rag_assistant: "rag"
+        "contract_audit": "contract",
+        "invoice_reconcile": "invoice",
+        "meeting_minutes": "meeting",
+        "rag_assistant": "rag"
       };
       const mode = map[selectedFlow && selectedFlow.id] || "contract";
       document.getElementById("flow-mode").value = mode;
       toggleFlowInputs();
       navigate("flows-runner");
-      showToast(`Scenario "${selectedFlow.title}" caricato nel Runner`, "info");
     }
 
     async function loadFlowsCatalog() {
@@ -1557,120 +1175,73 @@
           }
         }
       } catch (_) {
-        // Fallback silently to embedded 7 flows
+        // Keep embedded catalog if offline
       }
       renderFlowsCatalog();
     }
 
-    /* =========================================================
-       VIEW 3: KILLER APP RUNNER & LIVE STEPPER
-       ========================================================= */
-    function renderRunnerStepper(mode, states = ["idle", "idle", "idle", "idle"]) {
-      const labels = STEPPER_CONFIG[mode] || STEPPER_CONFIG.contract;
-      const container = document.getElementById("runner-stepper");
-      container.innerHTML = labels.map((lbl, idx) => {
-        const st = states[idx] || "idle";
-        let ring = "border-slate-800 bg-slate-950/60 text-slate-500";
-        let badge = `<span class="w-5 h-5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center">${idx + 1}</span>`;
-        if (st === "active") {
-          ring = "border-sky-400/60 bg-sky-500/10 text-sky-200 shadow-[0_0_16px_rgba(56,189,248,0.18)]";
-          badge = `<span class="w-5 h-5 rounded-full bg-sky-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">${idx + 1}</span>`;
-        } else if (st === "done") {
-          ring = "border-emerald-500/40 bg-emerald-500/10 text-emerald-200";
-          badge = `<span class="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">✓</span>`;
-        } else if (st === "error") {
-          ring = "border-rose-500/50 bg-rose-500/10 text-rose-200";
-          badge = `<span class="w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">✕</span>`;
+    /* STACK READINESS */
+    async function loadStatus() {
+      const grid = document.getElementById("status-grid");
+      grid.innerHTML = '<div class="card"><p class="muted">Probing internal services...</p></div>';
+      try {
+        const res = await fetch("/specialized/status", { headers: authHeaders() });
+        if (!res.ok) throw new Error("HTTP " + res.status + " — verifica la Bearer Key");
+        const data = await res.json();
+        setConnectionBadge(true, "Connected");
+        grid.innerHTML = "";
+        for (const [name, info] of Object.entries(data.services || {})) {
+          const ok = info.status === "ok";
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:#fff;">${name}</strong>
+              <span class="status-pill ${ok ? 'ok' : 'err'}">${info.status.toUpperCase()}</span>
+            </div>
+            <p class="muted" style="margin:8px 0 0;">${info.detail || ""}</p>
+            ${info.latency_ms !== undefined ? `<p class="muted" style="margin:4px 0 0; font-size:11.5px;">Latency: ${info.latency_ms} ms</p>` : ""}
+          `;
+          grid.appendChild(card);
         }
-        return `
-          <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all ${ring}">
-            ${badge}
-            <span class="text-xs font-semibold truncate">${escapeHtml(lbl)}</span>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function toggleFlowInputs() {
-      const mode = document.getElementById("flow-mode").value;
-      const fileRow = document.getElementById("flow-file-row");
-      const textRow = document.getElementById("flow-text-row");
-      const textLabel = document.getElementById("flow-text-label");
-      const fileLabel = document.getElementById("flow-file-label");
-      const searchOnlyBtn = document.getElementById("btn-search-only");
-      const sampleBtn = document.getElementById("btn-load-sample");
-      const queryBox = document.getElementById("search-query");
-
-      renderRunnerStepper(mode);
-
-      if (mode === "rag") {
-        fileRow.style.display = "none";
-        textRow.style.display = "block";
-        searchOnlyBtn.style.display = "inline-flex";
-        sampleBtn.style.display = "inline-flex";
-        textLabel.textContent = "Domanda / Query";
-        queryBox.placeholder = "Fai una domanda sui documenti indicizzati nella collection...";
-      } else if (mode === "contract") {
-        fileRow.style.display = "block";
-        textRow.style.display = "block";
-        searchOnlyBtn.style.display = "none";
-        sampleBtn.style.display = "inline-flex";
-        fileLabel.textContent = "Contratto Fornitore (PDF, DOCX, TXT, o Scansione) — opzionale";
-        textLabel.textContent = "Oppure incolla le clausole del contratto da verificare";
-        queryBox.placeholder = "Incolla qui il testo del contratto da confrontare con le policy aziendali...";
-      } else if (mode === "invoice") {
-        fileRow.style.display = "block";
-        textRow.style.display = "block";
-        searchOnlyBtn.style.display = "none";
-        sampleBtn.style.display = "inline-flex";
-        fileLabel.textContent = "Fattura / Scontrino (Scansione PNG/JPG, PDF, TXT) — opzionale";
-        textLabel.textContent = "Oppure incolla il testo della fattura";
-        queryBox.placeholder = "Incolla qui i dettagli della fattura da riconciliare con i contratti...";
-      } else if (mode === "meeting") {
-        fileRow.style.display = "block";
-        textRow.style.display = "none";
-        searchOnlyBtn.style.display = "none";
-        sampleBtn.style.display = "none";
-        fileLabel.textContent = "Registrazione Audio Riunione (WAV, MP3, M4A, OGG)";
+      } catch (err) {
+        grid.innerHTML = `<div class="card"><span class="status-pill err">PROBE ERROR</span><p class="muted" style="margin-top:8px;">${err.message}</p></div>`;
       }
     }
 
-    function loadSampleInput() {
-      const mode = document.getElementById("flow-mode").value;
-      const sample = SAMPLE_INPUTS[mode] || SAMPLE_INPUTS.contract;
-      document.getElementById("search-query").value = sample;
-      showToast("Testo di esempio italiano caricato", "info");
-    }
-
-    function updateFileBadge(inputId, infoId) {
-      const input = document.getElementById(inputId);
-      const info = document.getElementById(infoId);
-      if (input.files && input.files.length > 0) {
-        const f = input.files[0];
-        const kb = (f.size / 1024).toFixed(1);
-        info.innerHTML = `<span class="text-sky-300 font-semibold">${escapeHtml(f.name)}</span> (${kb} KB)`;
-      } else {
-        info.textContent = "Nessun file selezionato";
+    /* KNOWLEDGE BASE */
+    async function loadCollections() {
+      const tbody = document.getElementById("collections-tbody");
+      try {
+        const res = await fetch("/v1/knowledge/collections", { headers: authHeaders() });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        const cols = data.collections || [];
+        if (!cols.length) {
+          tbody.innerHTML = '<tr><td colspan="4" class="muted">Nessuna collection creata.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = cols.map(c => `
+          <tr>
+            <td><code>${c.name}</code></td>
+            <td>${c.vector_size}</td>
+            <td>${c.chunks_count}</td>
+            <td><button class="btn sm danger" onclick="deleteCollection('${c.name}')">Delete</button></td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">Error: ${err.message}</td></tr>`;
       }
     }
 
-    function setupDropZone(zoneId, inputId, infoId) {
-      const zone = document.getElementById(zoneId);
-      const input = document.getElementById(inputId);
-      if (!zone || !input) return;
-      ["dragenter", "dragover"].forEach(ev => {
-        zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    async function deleteCollection(name) {
+      if (!confirm("Eliminare la collection '" + name + "' e tutti i relativi vettori?")) return;
+      const res = await fetch("/v1/knowledge/collections/" + encodeURIComponent(name), {
+        method: "DELETE",
+        headers: authHeaders()
       });
-      ["dragleave", "drop"].forEach(ev => {
-        zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove("drag-over"); });
-      });
-      zone.addEventListener("drop", e => {
-        if (e.dataTransfer.files && e.dataTransfer.files.length) {
-          input.files = e.dataTransfer.files;
-          updateFileBadge(inputId, infoId);
-          showToast(`File selezionato: ${e.dataTransfer.files[0].name}`, "info");
-        }
-      });
+      if (res.ok) loadCollections();
+      else alert("Delete failed: HTTP " + res.status);
     }
 
     async function extractFileText(file) {
@@ -1693,20 +1264,108 @@
       return (d.document && d.document.md_content) || d.markdown || d.text || JSON.stringify(d);
     }
 
+    async function runIngest() {
+      const out = document.getElementById("ingest-out");
+      const col = document.getElementById("ingest-col").value.trim();
+      const meta = document.getElementById("ingest-meta").value.trim();
+      const fileInput = document.getElementById("ingest-file");
+      const rawText = document.getElementById("ingest-text").value;
+      const sanitize = document.getElementById("ingest-sanitize").checked;
+
+      out.textContent = "Processing...";
+      try {
+        let textToIndex = rawText;
+        let sourceName = "console_input.txt";
+
+        if (fileInput.files.length > 0) {
+          const f = fileInput.files[0];
+          sourceName = f.name;
+          textToIndex = await extractFileText(f);
+        }
+        if (!textToIndex.trim()) throw new Error("Fornisci un file o del testo.");
+
+        if (sanitize) {
+          const piiRes = await fetch("/v1/privacy/anonymize", {
+            method: "POST",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ text: textToIndex, language: "it" })
+          });
+          if (!piiRes.ok) throw new Error("Presidio failed: " + await piiRes.text());
+          textToIndex = (await piiRes.json()).text;
+        }
+
+        const parsedMeta = meta ? JSON.parse(meta) : {};
+        parsedMeta.source_file = sourceName;
+        parsedMeta.sanitized = sanitize;
+
+        const ingestForm = new FormData();
+        ingestForm.append("collection", col);
+        ingestForm.append("text", textToIndex);
+        ingestForm.append("metadata", JSON.stringify(parsedMeta));
+
+        const ingRes = await fetch("/v1/knowledge/ingest", {
+          method: "POST",
+          headers: authHeaders(),
+          body: ingestForm
+        });
+        const ingBody = await ingRes.json();
+        if (!ingRes.ok) throw new Error(JSON.stringify(ingBody));
+        out.textContent = JSON.stringify(ingBody, null, 2);
+        loadCollections();
+      } catch (err) {
+        out.textContent = "Error: " + err.message;
+      }
+    }
+
+    /* KILLER APP RUNNER */
+    function toggleFlowInputs() {
+      const mode = document.getElementById("flow-mode").value;
+      const fileRow = document.getElementById("flow-file-row");
+      const textRow = document.getElementById("flow-text-row");
+      const textLabel = document.getElementById("flow-text-label");
+      const fileLabel = document.getElementById("flow-file-label");
+      const searchOnlyBtn = document.getElementById("btn-search-only");
+      const queryBox = document.getElementById("search-query");
+
+      if (mode === "rag") {
+        fileRow.style.display = "none";
+        textRow.style.display = "block";
+        searchOnlyBtn.style.display = "inline-flex";
+        textLabel.textContent = "Domanda / Query";
+        queryBox.placeholder = "Fai una domanda sui documenti indicizzati nella collection...";
+      } else if (mode === "contract") {
+        fileRow.style.display = "block";
+        textRow.style.display = "block";
+        searchOnlyBtn.style.display = "none";
+        fileLabel.textContent = "Contratto Fornitore (PDF, DOCX, TXT, o Scansione) — opzionale se incollato sotto";
+        textLabel.textContent = "Oppure incolla le clausole del contratto da verificare";
+        queryBox.placeholder = "Incolla qui il testo del contratto da confrontare con le policy aziendali...";
+      } else if (mode === "invoice") {
+        fileRow.style.display = "block";
+        textRow.style.display = "block";
+        searchOnlyBtn.style.display = "none";
+        fileLabel.textContent = "Fattura / Scontrino (Scansione PNG/JPG, PDF, TXT) — opzionale se incollato sotto";
+        textLabel.textContent = "Oppure incolla il testo della fattura";
+        queryBox.placeholder = "Incolla qui i dettagli della fattura da riconciliare con i contratti...";
+      } else if (mode === "meeting") {
+        fileRow.style.display = "block";
+        textRow.style.display = "none";
+        searchOnlyBtn.style.display = "none";
+        fileLabel.textContent = "Registrazione Audio Riunione (WAV, MP3, M4A, OGG)";
+      }
+    }
+
     async function runSearchOnly() {
       const out = document.getElementById("rag-out");
-      renderRunnerStepper("rag", ["active", "idle", "idle", "idle"]);
       out.textContent = "Searching pgvector...";
       try {
         const col = document.getElementById("search-col").value.trim();
         const query = document.getElementById("search-query").value.trim();
         const filterStr = document.getElementById("search-filter").value.trim();
         const rerank = document.getElementById("search-rerank").checked;
-        if (!query) throw new Error("Inserisci una domanda o query.");
         const payload = { collection: col, query, top_k: 4, rerank };
         if (filterStr) payload.filter_metadata = JSON.parse(filterStr);
 
-        renderRunnerStepper("rag", ["done", "active", rerank ? "active" : "idle", "idle"]);
         const res = await fetch("/v1/knowledge/search", {
           method: "POST",
           headers: authHeaders({ "Content-Type": "application/json" }),
@@ -1714,30 +1373,23 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(JSON.stringify(data));
-        renderRunnerStepper("rag", ["done", "done", rerank ? "done" : "idle", "idle"]);
         out.textContent = JSON.stringify(data, null, 2);
-        showToast("Ricerca pgvector completata", "success");
       } catch (err) {
-        renderRunnerStepper("rag", ["done", "error", "idle", "idle"]);
         out.textContent = "Error: " + err.message;
-        showToast("Errore nella ricerca", "error");
       }
     }
 
     async function runRagAnswer() {
       const out = document.getElementById("rag-out");
-      renderRunnerStepper("rag", ["active", "idle", "idle", "idle"]);
       out.textContent = "Step 1/2: Retrieving & reranking chunks from pgvector...";
       try {
         const col = document.getElementById("search-col").value.trim();
         const query = document.getElementById("search-query").value.trim();
         const filterStr = document.getElementById("search-filter").value.trim();
         const rerank = document.getElementById("search-rerank").checked;
-        if (!query) throw new Error("Inserisci una domanda prima di eseguire il RAG.");
         const payload = { collection: col, query, top_k: 3, rerank };
         if (filterStr) payload.filter_metadata = JSON.parse(filterStr);
 
-        renderRunnerStepper("rag", ["done", "active", "active", "idle"]);
         const sRes = await fetch("/v1/knowledge/search", {
           method: "POST",
           headers: authHeaders({ "Content-Type": "application/json" }),
@@ -1747,12 +1399,9 @@
         if (!sRes.ok) throw new Error(JSON.stringify(sData));
         const hits = sData.results || [];
         if (!hits.length) {
-          renderRunnerStepper("rag", ["done", "done", "done", "idle"]);
           out.textContent = "Nessun chunk trovato nella collection '" + col + "'.";
           return;
         }
-
-        renderRunnerStepper("rag", ["done", "done", "done", "active"]);
         out.textContent = "Step 2/2: Generating grounded answer via chat-small...";
         const ctx = hits.map((h, i) => `[${i+1}] (${(h.metadata && h.metadata.source_file) || h.metadata.source || 'doc'}): ${h.text}`).join("\n");
         const cRes = await fetch("/v1/chat/completions", {
@@ -1768,14 +1417,10 @@
         });
         const cData = await cRes.json();
         if (!cRes.ok) throw new Error(JSON.stringify(cData));
-        renderRunnerStepper("rag", ["done", "done", "done", "done"]);
         const answer = cData.choices[0].message.content;
         out.textContent = "RISPOSTA GROUNDED:\n" + answer + "\n\nFONTI CITATE:\n" + JSON.stringify(hits, null, 2);
-        showToast("Pipeline RAG completata", "success");
       } catch (err) {
-        renderRunnerStepper("rag", ["done", "error", "idle", "idle"]);
         out.textContent = "Error: " + err.message;
-        showToast("Errore esecuzione RAG", "error");
       }
     }
 
@@ -1789,17 +1434,9 @@
       const fileInput = document.getElementById("flow-file");
       const rawText = document.getElementById("search-query").value.trim();
 
-      let currentStep = 0;
-      const setStep = (idx, status = "active") => {
-        currentStep = idx;
-        const arr = [0, 1, 2, 3].map(i => (i < idx ? "done" : (i === idx ? status : "idle")));
-        renderRunnerStepper(mode, arr);
-      };
-
       try {
         if (mode === "meeting") {
           if (!fileInput.files.length) throw new Error("Seleziona prima un file audio.");
-          setStep(0, "active");
           out.textContent = "Step 1/3: Trascrizione audio via Whisper...";
           const fd = new FormData();
           fd.append("file", fileInput.files[0]);
@@ -1807,7 +1444,6 @@
           if (!tRes.ok) throw new Error("Transcription failed: " + await tRes.text());
           const transcript = (await tRes.json()).text || "";
 
-          setStep(1, "active");
           out.textContent = "Step 2/3: Mascheramento PII locale via Presidio...";
           const pRes = await fetch("/v1/privacy/anonymize", {
             method: "POST",
@@ -1817,7 +1453,6 @@
           if (!pRes.ok) throw new Error("Presidio failed: " + await pRes.text());
           const cleanTranscript = (await pRes.json()).text;
 
-          setStep(2, "active");
           out.textContent = "Step 3/3: Estrazione verbale esecutivo e action item...";
           const cRes = await fetch("/v1/chat/completions", {
             method: "POST",
@@ -1832,22 +1467,17 @@
           });
           const cData = await cRes.json();
           if (!cRes.ok) throw new Error(JSON.stringify(cData));
-          renderRunnerStepper(mode, ["done", "done", "done", "done"]);
           out.textContent = "VERBALE ESECUTIVO:\n" + cData.choices[0].message.content + "\n\nTRASCRIZIONE ANONIMIZZATA:\n" + cleanTranscript;
-          showToast("Verbale riunione generato", "success");
           return;
         }
 
-        // Contract Audit or Invoice Reconciliation
-        setStep(0, "active");
         out.textContent = "Step 1/4: Estrazione testo documento...";
         let docText = rawText;
         if (fileInput.files.length > 0) {
           docText = await extractFileText(fileInput.files[0]);
         }
-        if (!docText) throw new Error("Carica un file o incolla il testo del documento (o usa Load Sample Input).");
+        if (!docText) throw new Error("Carica un file o incolla il testo del documento.");
 
-        setStep(1, "active");
         out.textContent = "Step 2/4: Mascheramento PII locale via Presidio...";
         const pRes = await fetch("/v1/privacy/anonymize", {
           method: "POST",
@@ -1857,12 +1487,11 @@
         if (!pRes.ok) throw new Error("Presidio failed: " + await pRes.text());
         const cleanDoc = (await pRes.json()).text;
 
-        setStep(2, "active");
         out.textContent = "Step 3/4: Ricerca policy/contratti di riferimento su pgvector...";
         const searchQuery = mode === "contract"
           ? "clausole standard penali recesso pagamento responsabilita SLA foro competente"
           : "contratto ordine acquisto importo corrispettivo termini pagamento " + cleanDoc.slice(0, 250);
-        const searchPayload = { collection: col, query: searchQuery, top_k: 4, rerank: document.getElementById("search-rerank").checked };
+        const searchPayload = { collection: col, query: searchQuery, top_k: 4, rerank: true };
         if (filterStr) searchPayload.filter_metadata = JSON.parse(filterStr);
 
         const sRes = await fetch("/v1/knowledge/search", {
@@ -1876,7 +1505,6 @@
         const refCtx = hits.map((h, i) => `[REF-${i+1}] (${(h.metadata && h.metadata.source_file) || h.metadata.source || 'kb'}): ${h.text}`).join("\n")
           || "Nessun documento di riferimento trovato nella collection.";
 
-        setStep(3, "active");
         out.textContent = "Step 4/4: Analisi AI di conformità / riconciliazione...";
         const sysPrompt = mode === "contract"
           ? "Sei un Senior Legal & Compliance Auditor. Confronta il contratto anonimizzato con le policy interne [REF-n] e produci: 1) Verdetto (CONFORME / CON RISERVE / NON CONFORME), 2) Tabella Clausole e Rischi, 3) Proposta di Redlining."
@@ -1896,158 +1524,16 @@
         });
         const cData = await cRes.json();
         if (!cRes.ok) throw new Error(JSON.stringify(cData));
-
-        renderRunnerStepper(mode, ["done", "done", "done", "done"]);
         out.textContent = cData.choices[0].message.content + "\n\n--- INPUT ANONIMIZZATO INVIATO AL MODELLO ---\n" + cleanDoc.slice(0, 1200);
-        showToast("Killer App completata con successo", "success");
-      } catch (err) {
-        setStep(currentStep, "error");
-        out.textContent = "Error: " + err.message;
-        showToast("Errore durante l'esecuzione della pipeline", "error");
-      }
-    }
-
-    /* =========================================================
-       VIEW 4: KNOWLEDGE BASE (pgvector)
-       ========================================================= */
-    async function loadCollections() {
-      const tbody = document.getElementById("collections-tbody");
-      try {
-        const res = await fetch("/v1/knowledge/collections", { headers: authHeaders() });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        const cols = data.collections || [];
-        document.getElementById("kpi-collections").textContent = cols.length;
-        const totalChunks = cols.reduce((acc, c) => acc + (Number(c.chunks_count) || 0), 0);
-        document.getElementById("kpi-chunks").textContent = totalChunks;
-
-        if (!cols.length) {
-          tbody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-500">Nessuna collection creata in knowledge_db.</td></tr>';
-          return;
-        }
-        tbody.innerHTML = cols.map(c => `
-          <tr class="hover:bg-slate-800/30 transition">
-            <td class="py-3 px-3 font-mono text-sky-300 font-semibold">${escapeHtml(c.name)}</td>
-            <td class="py-3 px-3"><span class="px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 font-mono text-[11px]">${c.vector_size} dim</span></td>
-            <td class="py-3 px-3 font-mono text-slate-300">${c.chunks_count}</td>
-            <td class="py-3 px-3 text-right">
-              <button onclick="confirmDeleteCollection('${escapeHtml(c.name)}')"
-                class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition">
-                Delete
-              </button>
-            </td>
-          </tr>
-        `).join("");
-      } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500 font-mono">Offline / ${escapeHtml(err.message)}</td></tr>`;
-      }
-    }
-
-    function confirmDeleteCollection(name) {
-      openConfirmModal(
-        "Elimina Collection Vettoriale",
-        `Sei sicuro di voler eliminare definitivamente la collection "${name}" e tutti i relativi vettori da PostgreSQL pgvector?`,
-        async () => {
-          try {
-            const res = await fetch("/v1/knowledge/collections/" + encodeURIComponent(name), {
-              method: "DELETE",
-              headers: authHeaders()
-            });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            showToast(`Collection "${name}" eliminata`, "success");
-            loadCollections();
-          } catch (err) {
-            showToast("Errore eliminazione: " + err.message, "error");
-          }
-        }
-      );
-    }
-
-    async function runIngest() {
-      const out = document.getElementById("ingest-out");
-      const col = document.getElementById("ingest-col").value.trim();
-      const meta = document.getElementById("ingest-meta").value.trim();
-      const fileInput = document.getElementById("ingest-file");
-      const rawText = document.getElementById("ingest-text").value;
-      const sanitize = document.getElementById("ingest-sanitize").checked;
-
-      out.textContent = "Processing ingest pipeline...";
-      try {
-        let textToIndex = rawText;
-        let sourceName = "console_input.txt";
-
-        if (fileInput.files.length > 0) {
-          const f = fileInput.files[0];
-          sourceName = f.name;
-          textToIndex = await extractFileText(f);
-        }
-        if (!textToIndex.trim()) throw new Error("Fornisci un file o del testo da indicizzare.");
-
-        if (sanitize) {
-          out.textContent = "Sanitizing PII via Presidio...";
-          const piiRes = await fetch("/v1/privacy/anonymize", {
-            method: "POST",
-            headers: authHeaders({ "Content-Type": "application/json" }),
-            body: JSON.stringify({ text: textToIndex, language: "it" })
-          });
-          if (!piiRes.ok) throw new Error("Presidio failed: " + await piiRes.text());
-          textToIndex = (await piiRes.json()).text;
-        }
-
-        const parsedMeta = meta ? JSON.parse(meta) : {};
-        parsedMeta.source_file = sourceName;
-        parsedMeta.sanitized = sanitize;
-
-        const ingestForm = new FormData();
-        ingestForm.append("collection", col);
-        ingestForm.append("text", textToIndex);
-        ingestForm.append("metadata", JSON.stringify(parsedMeta));
-
-        out.textContent = "Generating embeddings & storing in pgvector...";
-        const ingRes = await fetch("/v1/knowledge/ingest", {
-          method: "POST",
-          headers: authHeaders(),
-          body: ingestForm
-        });
-        const ingBody = await ingRes.json();
-        if (!ingRes.ok) throw new Error(JSON.stringify(ingBody));
-        out.textContent = JSON.stringify(ingBody, null, 2);
-        showToast(`Indicizzati ${ingBody.chunks_indexed || 0} chunk in "${col}"`, "success");
-        loadCollections();
       } catch (err) {
         out.textContent = "Error: " + err.message;
-        showToast("Errore ingestione documento", "error");
       }
     }
 
-    /* =========================================================
-       VIEW 5: PRIVACY SANDBOX (Presidio Visual Highlighter)
-       ========================================================= */
-    function renderHighlightedPii(text) {
-      const badgeStyles = {
-        PERSON:        "bg-blue-500/20 text-blue-300 border-blue-400/40",
-        EMAIL_ADDRESS: "bg-purple-500/20 text-purple-300 border-purple-400/40",
-        PHONE_NUMBER:  "bg-amber-500/20 text-amber-300 border-amber-400/40",
-        IBAN_CODE:     "bg-rose-500/20 text-rose-300 border-rose-400/40",
-        CREDIT_CARD:   "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
-      };
-      const placeholderRe = /<([A-Z_]+)>/g;
-      let count = 0;
-      const escaped = escapeHtml(text);
-      const html = escaped.replace(/&lt;([A-Z_]+)&gt;/g, (_, entity) => {
-        count++;
-        const style = badgeStyles[entity] || "bg-emerald-500/20 text-emerald-300 border-emerald-400/40";
-        return `<span class="inline-flex items-center px-2 py-0.5 mx-0.5 rounded-md border font-mono text-xs font-semibold ${style}">&lt;${entity}&gt;</span>`;
-      });
-      return { html, count };
-    }
-
+    /* PRIVACY SANDBOX */
     async function runAnonymize() {
       const out = document.getElementById("pii-out");
-      const preview = document.getElementById("pii-visual-preview");
-      const badge = document.getElementById("pii-count-badge");
-      preview.innerHTML = `<span class="text-slate-400 text-xs font-mono">Scanning with Microsoft Presidio...</span>`;
-
+      out.textContent = "Scanning with Presidio...";
       try {
         const text = document.getElementById("pii-input").value;
         const language = document.getElementById("pii-lang").value;
@@ -2059,37 +1545,110 @@
         const data = await res.json();
         if (!res.ok) throw new Error(JSON.stringify(data));
         out.textContent = JSON.stringify(data, null, 2);
-
-        const maskedText = data.text || "";
-        const { html, count } = renderHighlightedPii(maskedText);
-        preview.innerHTML = html || `<span class="text-slate-500 text-xs">Nessun testo restituito.</span>`;
-        badge.textContent = `${count} entità mascherate`;
-        badge.className = count > 0
-          ? "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-          : "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-400 border border-slate-700";
-        showToast(`Presidio: ${count} entità PII mascherate`, "success");
       } catch (err) {
         out.textContent = "Error: " + err.message;
-        preview.innerHTML = `<span class="text-rose-400 text-xs font-mono">Error: ${escapeHtml(err.message)}</span>`;
-        showToast("Errore chiamata Presidio", "error");
       }
     }
 
-    /* =========================================================
-       BOOTSTRAP
-       ========================================================= */
-    window.addEventListener("DOMContentLoaded", () => {
-      setupDropZone("runner-drop-zone", "flow-file", "runner-file-info");
-      setupDropZone("ingest-drop-zone", "ingest-file", "ingest-file-info");
-      toggleFlowInputs();
-      renderFlowsCatalog();
 
+    /* AUTOMATIONS & SCHEDULES */
+    async function loadSchedules() {
+      const sBody = document.getElementById("schedules-tbody");
+      const rBody = document.getElementById("runs-tbody");
+      try {
+        const res = await fetch("/v1/schedules", { headers: authHeaders() });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        const scheds = data.schedules || [];
+        const runs = data.recent_runs || [];
+
+        if (!scheds.length) {
+          sBody.innerHTML = '<tr><td colspan="4" class="muted">Nessuna automazione configurata.</td></tr>';
+        } else {
+          sBody.innerHTML = scheds.map(s => `
+            <tr>
+              <td><strong>${s.name}</strong><br><code style="font-size:11px;color:#93c5fd;">${s.flow_type}</code></td>
+              <td>${s.interval_minutes}m</td>
+              <td><span class="status-pill ${s.enabled ? 'ok' : 'err'}">${s.enabled ? 'ACTIVE' : 'PAUSED'}</span></td>
+              <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="btn sm" onclick="runScheduleNow('${s.id}')">▶ Run Now</button>
+                <button class="btn sm secondary" onclick="toggleSchedule('${s.id}')">${s.enabled ? 'Pause' : 'Resume'}</button>
+                <button class="btn sm danger" onclick="deleteSchedule('${s.id}')">Del</button>
+              </td>
+            </tr>
+          `).join("");
+        }
+
+        if (!runs.length) {
+          rBody.innerHTML = '<tr><td colspan="5" class="muted">Nessuna esecuzione registrata.</td></tr>';
+        } else {
+          rBody.innerHTML = runs.map(r => `
+            <tr>
+              <td style="white-space:nowrap;">${r.executed_at.replace("T", " ").slice(0, 19)}</td>
+              <td><strong>${r.schedule_name}</strong><br><code style="font-size:11px;">${r.flow_type}</code></td>
+              <td><span class="status-pill ${r.status === 'ok' ? 'ok' : 'err'}">${r.status.toUpperCase()}</span></td>
+              <td>${r.duration_ms} ms</td>
+              <td><code style="font-size:11px;">${JSON.stringify(r.output).slice(0, 140)}</code></td>
+            </tr>
+          `).join("");
+        }
+      } catch (err) {
+        sBody.innerHTML = `<tr><td colspan="4" class="muted">Error: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function createSchedule() {
+      const name = document.getElementById("sched-name").value.trim();
+      const flow_type = document.getElementById("sched-flow-type").value;
+      const interval_minutes = parseInt(document.getElementById("sched-interval").value, 10) || 15;
+      const collection = document.getElementById("sched-col").value.trim() || "enterprise_docs";
+      const tenant = document.getElementById("sched-tenant").value.trim() || null;
+      const notify_to = document.getElementById("sched-notify").value.trim() || null;
+      if (!name) return alert("Inserisci un nome per l'automazione.");
+
+      const res = await fetch("/v1/schedules", {
+        method: "POST",
+        headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          name,
+          flow_type,
+          connector_type: flow_type.startsWith("email_") ? "email_imap" : "internal_cron",
+          interval_minutes,
+          enabled: true,
+          config: { collection, tenant, notify_to }
+        })
+      });
+      if (res.ok) {
+        document.getElementById("sched-name").value = "";
+        loadSchedules();
+      } else {
+        alert("Errore creazione schedule: " + await res.text());
+      }
+    }
+
+    async function toggleSchedule(id) {
+      const res = await fetch("/v1/schedules/" + id + "/toggle", { method: "PATCH", headers: authHeaders() });
+      if (res.ok) loadSchedules();
+    }
+
+    async function deleteSchedule(id) {
+      if (!confirm("Eliminare questa automazione?")) return;
+      const res = await fetch("/v1/schedules/" + id, { method: "DELETE", headers: authHeaders() });
+      if (res.ok) loadSchedules();
+    }
+
+    async function runScheduleNow(id) {
+      const res = await fetch("/v1/schedules/" + id + "/run-now", { method: "POST", headers: authHeaders() });
+      if (res.ok) loadSchedules();
+      else alert("Errore esecuzione: " + await res.text());
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      renderFlowsCatalog();
       const existing = getKey();
       if (existing) {
         document.getElementById("api-key").value = existing;
-        const mobileInput = document.getElementById("api-key-mobile");
-        if (mobileInput) mobileInput.value = existing;
-        setConnectionBadge("key", "Key Active");
+        setConnectionBadge(true, "Key Loaded");
         loadStatus();
         loadCollections();
         loadFlowsCatalog();

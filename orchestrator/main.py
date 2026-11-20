@@ -92,6 +92,33 @@ async def ensure_knowledge_schema(pool: asyncpg.Pool) -> None:
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_kb_chunks_collection ON kb_chunks(collection_name);")
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_kb_chunks_document ON kb_chunks(document_id);")
         await conn.execute("CREATE INDEX IF NOT EXISTS idx_kb_chunks_metadata ON kb_chunks USING gin(metadata);")
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS flow_schedules (
+                id UUID PRIMARY KEY,
+                name TEXT NOT NULL,
+                flow_type TEXT NOT NULL,
+                connector_type TEXT NOT NULL DEFAULT 'email_imap',
+                interval_minutes INTEGER NOT NULL DEFAULT 15,
+                enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                config_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+                last_run_at TIMESTAMPTZ,
+                last_status TEXT,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+        """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS flow_runs (
+                id UUID PRIMARY KEY,
+                schedule_id UUID REFERENCES flow_schedules(id) ON DELETE SET NULL,
+                schedule_name TEXT NOT NULL,
+                flow_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                duration_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
+                output_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+                executed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+        """)
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_flow_runs_executed_at ON flow_runs(executed_at DESC);")
 
 
 async def ensure_knowledge_database() -> None:
@@ -287,7 +314,103 @@ async def _probe_http(client: httpx.AsyncClient, url: str) -> Dict[str, Any]:
         return {"status": "unreachable", "detail": str(exc), "latency_ms": latency}
 
 
+
+FLOW_METADATA: Dict[str, Dict[str, Any]] = {
+    "contract_audit": {
+        "title": "Contract & Compliance Guardian",
+        "category": "Killer App",
+        "cli_command": "python -m flows.runner contract-audit --file ./supplier.pdf --collection legal_kb --tenant legal",
+        "steps": ["OCR / Docling", "Presidio PII Mask", "pgvector Policy Search + Rerank", "LLM Compliance & Redlining"],
+        "summary": "Estrae un contratto fornitore, maschera i PII localmente e confronta le clausole con il playbook aziendale su pgvector."
+    },
+    "invoice_reconcile": {
+        "title": "Invoice Zero-Touch Reconciliation",
+        "category": "Killer App",
+        "cli_command": "python -m flows.runner invoice-reconcile --file ./invoice.png --collection finance_kb --tenant finance",
+        "steps": ["OCR / Docling", "Presidio PII Mask", "pgvector Contract Match", "LLM Discrepancy Audit"],
+        "summary": "Legge fatture o scontrini scansionati, anonimizza i PII e verifica importi e termini contro i contratti approvati."
+    },
+    "voice_support": {
+        "title": "Voice-to-Knowledge Concierge",
+        "category": "Killer App",
+        "cli_command": "python -m flows.runner voice-ask --audio ./question.wav --collection support_kb --tenant hr",
+        "steps": ["Whisper STT", "pgvector Search + Rerank", "LLM Grounded Answer", "Piper TTS"],
+        "summary": "Trascrive domande vocali, interroga la Knowledge Base con reranking e sintetizza la risposta vocale."
+    },
+    "ingest_safe": {
+        "title": "PII-Safe Document & Scan Ingest",
+        "category": "Core Pipeline",
+        "cli_command": "python -m flows.runner ingest-safe --file ./doc.pdf --collection enterprise_docs --tenant default",
+        "steps": ["Adaptive Extract (OCR/Docling)", "Presidio Anonymize", "LiteLLM Embeddings", "pgvector Store"],
+        "summary": "Pipeline DLP preventiva: sanifica i dati personali prima di generare gli embedding e salvarli in PostgreSQL."
+    },
+    "rag_assistant": {
+        "title": "Multi-Tenant Grounded RAG",
+        "category": "Core Pipeline",
+        "cli_command": "python -m flows.runner ask --collection enterprise_docs --tenant default --question '...'",
+        "steps": ["Query Embedding", "pgvector Metadata Filter", "LiteLLM Rerank", "Cited Chat Completion"],
+        "summary": "Retrieval isolato per tenant con ri-ordinamento semantico e citazione obbligatoria delle fonti."
+    },
+    "pii_audit": {
+        "title": "Privacy Audit & GDPR Risk Report",
+        "category": "Quick Flow",
+        "cli_command": "python -m flows.runner pii-report --file ./export.txt --language it",
+        "steps": ["Extract Text", "Presidio Scan & Mask", "Entity Risk Scoring"],
+        "summary": "Analizza documenti o testi e calcola il livello di rischio GDPR con conteggio delle entità mascherate."
+    },
+    "email_triage": {
+        "title": "Enterprise Email / PEC Triage",
+        "category": "Killer App",
+        "cli_command": "python -m flows.scheduler",
+        "steps": ["IMAP/PEC Poll", "Extract Attachments", "Presidio PII Mask", "pgvector Audit / Draft Reply"],
+        "summary": "Connettore aziendale IMAP/SMTP: legge email e allegati, esegue audit contratti/fatture o salva bozze di risposta RAG."
+    },
+    "meeting_minutes": {
+        "title": "Executive Meeting Minutes",
+        "category": "Quick Flow",
+        "cli_command": "python -m flows.runner meeting-minutes --audio ./sync.mp3 --collection meetings_kb",
+        "steps": ["Whisper Transcribe", "Presidio PII Mask", "LLM Action Items", "Optional pgvector Index"],
+        "summary": "Trascrive riunioni audio, rimuove i nomi dei partecipanti ed estrae decisioni e action item."
+    },
+}
+
+
+def _resolve_flows_dir() -> Path:
+    here = Path(__file__).resolve().parent
+    for candidate in (here / "flows" / "pipelines", here.parent / "flows" / "pipelines"):
+        if candidate.is_dir():
+            return candidate
+    return here.parent / "flows" / "pipelines"
+
+
+@app.get("/v1/flows/catalog", summary="Elenca le pipeline Python disponibili in flows/pipelines/ con il relativo codice sorgente")
+async def get_flows_catalog():
+    pipelines_dir = _resolve_flows_dir()
+    items = []
+    if pipelines_dir.is_dir():
+        for py_file in sorted(pipelines_dir.glob("*.py")):
+            if py_file.name == "__init__.py":
+                continue
+            slug = py_file.stem
+            meta = FLOW_METADATA.get(slug, {})
+            source_code = py_file.read_text(encoding="utf-8")
+            items.append({
+                "id": slug,
+                "filename": f"flows/pipelines/{py_file.name}",
+                "title": meta.get("title", slug.replace("_", " ").title()),
+                "category": meta.get("category", "Pipeline"),
+                "summary": meta.get("summary", ""),
+                "cli_command": meta.get("cli_command", f"python -m flows.runner {slug.replace('_', '-')}"),
+                "steps": meta.get("steps", []),
+                "code": source_code,
+            })
+    order = {"Killer App": 0, "Core Pipeline": 1, "Quick Flow": 2}
+    items.sort(key=lambda x: (order.get(x["category"], 9), x["title"]))
+    return {"flows": items}
+
+
 @app.get("/status", summary="Verifica lo stato di readiness dei servizi e dei motori interni")
+@app.get("/specialized/status", include_in_schema=False)
 async def stack_status():
     services: Dict[str, Any] = {
         "orchestrator": {"status": "ok", "detail": "FastAPI v1.2.0 active", "latency_ms": 0.0}
@@ -770,6 +893,195 @@ async def search_knowledge(payload: KnowledgeSearchRequest, request: Request):
             }
     except Exception as e:
         handle_downstream_error("Knowledge Search", e)
+
+
+
+
+# ==========================================
+# AUTOMATIONS & SCHEDULES (/v1/schedules/* - PostgreSQL)
+# ==========================================
+
+class ScheduleCreateRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=120, examples=["Triage PEC Contratti Fornitori"])
+    flow_type: str = Field(..., examples=["email_contract_audit"])
+    connector_type: str = Field(default="email_imap", examples=["email_imap"])
+    interval_minutes: int = Field(default=15, ge=1, le=10080)
+    enabled: bool = Field(default=True)
+    config: Dict[str, Any] = Field(default_factory=dict)
+
+
+@app.get("/v1/schedules", summary="Elenca le automazioni schedulate e le ultime esecuzioni")
+async def list_schedules():
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            sched_rows = await conn.fetch(
+                """
+                SELECT id, name, flow_type, connector_type, interval_minutes, enabled,
+                       config_json, last_run_at, last_status, created_at
+                FROM flow_schedules
+                ORDER BY created_at DESC
+                """
+            )
+            run_rows = await conn.fetch(
+                """
+                SELECT id, schedule_id, schedule_name, flow_type, status, duration_ms, output_json, executed_at
+                FROM flow_runs
+                ORDER BY executed_at DESC
+                LIMIT 25
+                """
+            )
+        schedules = []
+        for r in sched_rows:
+            cfg = json.loads(r["config_json"]) if isinstance(r["config_json"], str) else dict(r["config_json"] or {})
+            schedules.append({
+                "id": str(r["id"]),
+                "name": r["name"],
+                "flow_type": r["flow_type"],
+                "connector_type": r["connector_type"],
+                "interval_minutes": r["interval_minutes"],
+                "enabled": r["enabled"],
+                "config": cfg,
+                "last_run_at": r["last_run_at"].isoformat() if r["last_run_at"] else None,
+                "last_status": r["last_status"],
+                "created_at": r["created_at"].isoformat(),
+            })
+        runs = []
+        for r in run_rows:
+            out = json.loads(r["output_json"]) if isinstance(r["output_json"], str) else dict(r["output_json"] or {})
+            runs.append({
+                "id": str(r["id"]),
+                "schedule_id": str(r["schedule_id"]) if r["schedule_id"] else None,
+                "schedule_name": r["schedule_name"],
+                "flow_type": r["flow_type"],
+                "status": r["status"],
+                "duration_ms": r["duration_ms"],
+                "output": out,
+                "executed_at": r["executed_at"].isoformat(),
+            })
+        return {"schedules": schedules, "recent_runs": runs}
+    except Exception as e:
+        handle_downstream_error("Schedules DB", e)
+
+
+@app.post("/v1/schedules", summary="Crea una nuova automazione schedulata su PostgreSQL")
+async def create_schedule(payload: ScheduleCreateRequest):
+    try:
+        pool = await get_db_pool()
+        sched_id = uuid.uuid4()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO flow_schedules (id, name, flow_type, connector_type, interval_minutes, enabled, config_json)
+                VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+                """,
+                sched_id,
+                payload.name,
+                payload.flow_type,
+                payload.connector_type,
+                payload.interval_minutes,
+                payload.enabled,
+                json.dumps(payload.config),
+            )
+        return {"status": "created", "id": str(sched_id), "name": payload.name}
+    except Exception as e:
+        handle_downstream_error("Schedules DB", e)
+
+
+@app.patch("/v1/schedules/{schedule_id}/toggle", summary="Attiva o mette in pausa una schedulazione")
+async def toggle_schedule(schedule_id: str):
+    try:
+        uid = uuid.UUID(schedule_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid schedule_id UUID")
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "UPDATE flow_schedules SET enabled = NOT enabled WHERE id = $1 RETURNING enabled",
+                uid,
+            )
+            if row is None:
+                raise HTTPException(status_code=404, detail="Schedule not found")
+        return {"id": schedule_id, "enabled": row["enabled"]}
+    except Exception as e:
+        handle_downstream_error("Schedules DB", e)
+
+
+@app.delete("/v1/schedules/{schedule_id}", summary="Elimina una schedulazione")
+async def delete_schedule(schedule_id: str):
+    try:
+        uid = uuid.UUID(schedule_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid schedule_id UUID")
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            res = await conn.execute("DELETE FROM flow_schedules WHERE id = $1", uid)
+            if res == "DELETE 0":
+                raise HTTPException(status_code=404, detail="Schedule not found")
+        return {"status": "deleted", "id": schedule_id}
+    except Exception as e:
+        handle_downstream_error("Schedules DB", e)
+
+
+@app.post("/v1/schedules/{schedule_id}/run-now", summary="Esegue immediatamente una schedulazione e registra l'esito")
+async def run_schedule_now(schedule_id: str):
+    try:
+        uid = uuid.UUID(schedule_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid schedule_id UUID")
+    try:
+        pool = await get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT id, name, flow_type, config_json FROM flow_schedules WHERE id = $1",
+                uid,
+            )
+            if row is None:
+                raise HTTPException(status_code=404, detail="Schedule not found")
+
+        cfg = json.loads(row["config_json"]) if isinstance(row["config_json"], str) else dict(row["config_json"] or {})
+        start = time.perf_counter()
+        run_status = "ok"
+        output_payload: Dict[str, Any] = {}
+        try:
+            from flows.scheduler import execute_scheduled_flow
+            output_payload = await execute_scheduled_flow(row["flow_type"], cfg)
+        except Exception as exc:
+            run_status = "error"
+            output_payload = {"error": str(exc)}
+
+        duration_ms = round((time.perf_counter() - start) * 1000, 1)
+        run_id = uuid.uuid4()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO flow_runs (id, schedule_id, schedule_name, flow_type, status, duration_ms, output_json)
+                VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+                """,
+                run_id,
+                uid,
+                row["name"],
+                row["flow_type"],
+                run_status,
+                duration_ms,
+                json.dumps(output_payload),
+            )
+            await conn.execute(
+                "UPDATE flow_schedules SET last_run_at = NOW(), last_status = $2 WHERE id = $1",
+                uid,
+                run_status,
+            )
+        return {
+            "run_id": str(run_id),
+            "schedule_id": schedule_id,
+            "status": run_status,
+            "duration_ms": duration_ms,
+            "output": output_payload,
+        }
+    except Exception as e:
+        handle_downstream_error("Schedule Run", e)
 
 
 if __name__ == "__main__":

@@ -200,3 +200,61 @@ def test_killer_app_pipelines(tmp_path):
             await runner.cleanup()
 
     asyncio.run(run())
+
+
+def test_email_triage_pipeline_with_connector_double():
+    from flows.connectors.email_imap import IncomingEmail
+    from flows.pipelines.email_triage import email_triage_pipeline
+
+    class FakeEmailConnector:
+        def __init__(self):
+            self.drafts = []
+            self.sent = []
+
+        def fetch_unread_emails(self, limit=3, mark_seen=False):
+            return [
+                IncomingEmail(
+                    uid="42",
+                    subject="Richiesta politica resi",
+                    sender="cliente@example.com",
+                    body_text="Entro quanti giorni posso fare il reso?",
+                    attachments=[],
+                )
+            ]
+
+        def save_draft(self, to_addr, subject, body):
+            self.drafts.append({"to": to_addr, "subject": subject, "body": body})
+
+        def send_email(self, to_addr, subject, body):
+            self.sent.append({"to": to_addr, "subject": subject, "body": body})
+
+    async def run():
+        async def handler(request):
+            if request.path == "/v1/knowledge/search":
+                return web.json_response({
+                    "results": [{"id": "1", "score": 0.9, "text": "Resi entro 30 giorni.", "metadata": {"source": "policy.pdf"}}]
+                })
+            if request.path == "/v1/chat/completions":
+                return web.json_response({"choices": [{"message": {"content": "Il reso è accettato entro 30 giorni [1]."}}]})
+            return web.Response(status=404)
+
+        server = web.Application()
+        server.router.add_route("*", "/{path:.*}", handler)
+        runner = web.AppRunner(server)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+
+        client = AIFactoryClient(base_url=f"http://127.0.0.1:{port}", api_key="sk-mail-test")
+        connector = FakeEmailConnector()
+        try:
+            res = await email_triage_pipeline(client, connector, mode="rag_draft", collection="support_kb")
+            assert res["emails_scanned"] == 1
+            assert len(connector.drafts) == 1
+            assert connector.drafts[0]["to"] == "cliente@example.com"
+            assert "30 giorni" in connector.drafts[0]["body"]
+        finally:
+            await runner.cleanup()
+
+    asyncio.run(run())

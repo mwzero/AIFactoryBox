@@ -20,8 +20,8 @@ services:
     restart: unless-stopped
   orchestrator:
     build:
-      context: ./orchestrator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: orchestrator/Dockerfile
     container_name: ai-gateway-orchestrator
     environment:
     - DOCLING_URL=http://engine-doc-extraction:5000/process
@@ -156,6 +156,29 @@ services:
     volumes:
     - langfuse_postgres_data:/var/lib/postgresql/data
     - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    networks:
+    - ai-gateway-net
+    restart: unless-stopped
+  flow-scheduler:
+    build:
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    container_name: ai-flow-scheduler
+    command: ["python", "-m", "flows.scheduler"]
+    environment:
+    - KNOWLEDGE_DB_URL=postgresql://litellm:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres-audit:5432/knowledge_db
+    - AIFACTORYBOX_BASE_URL=http://nginx:80
+    - AIFACTORYBOX_API_KEY=${WEBUI_LITELLM_API_KEY:-${LITELLM_MASTER_KEY}}
+    - IMAP_HOST=${IMAP_HOST:-}
+    - IMAP_PORT=${IMAP_PORT:-993}
+    - SMTP_HOST=${SMTP_HOST:-}
+    - SMTP_PORT=${SMTP_PORT:-465}
+    - EMAIL_USER=${EMAIL_USER:-}
+    - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+    - SCHEDULER_POLL_SECONDS=${SCHEDULER_POLL_SECONDS:-30}
+    depends_on:
+    - postgres-audit
+    - nginx
     networks:
     - ai-gateway-net
     restart: unless-stopped
