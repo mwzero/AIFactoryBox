@@ -11,6 +11,10 @@ from flows.sdk import AIFactoryClient
 from flows.pipelines.ingest_safe import safe_ingest_pipeline
 from flows.pipelines.rag_assistant import rag_answer_pipeline
 from flows.pipelines.voice_support import voice_rag_pipeline
+from flows.pipelines.pii_audit import pii_audit_pipeline
+from flows.pipelines.meeting_minutes import meeting_minutes_pipeline
+from flows.pipelines.contract_audit import contract_audit_pipeline
+from flows.pipelines.invoice_reconcile import invoice_reconcile_pipeline
 
 
 def test_flows_sdk_and_pipelines(tmp_path):
@@ -110,6 +114,88 @@ def test_flows_sdk_and_pipelines(tmp_path):
             voice_out = await voice_rag_pipeline(client, audio_file, collection="kb_acme", tenant="acme")
             assert voice_out["transcript"] == "Qual è la politica di reso?"
             assert voice_out["audio"]["audio_base64"] == "UklGRg=="
+        finally:
+            await runner.cleanup()
+
+    asyncio.run(run())
+
+
+def test_killer_app_pipelines(tmp_path):
+    async def run():
+        async def handler(request):
+            path = request.path
+            if path == "/v1/privacy/anonymize":
+                body = await request.json()
+                masked = (
+                    body["text"]
+                    .replace("Mario Rossi", "<PERSON>")
+                    .replace("mario@example.com", "<EMAIL_ADDRESS>")
+                    .replace("IT60X0542811101000000123456", "<IBAN_CODE>")
+                )
+                return web.json_response({"text": masked})
+            if path == "/v1/audio/transcribe":
+                return web.json_response({"text": "Mario Rossi approva il rilascio entro venerdì."})
+            if path == "/v1/knowledge/ingest":
+                return web.json_response({"status": "indexed", "chunks_indexed": 1})
+            if path == "/v1/knowledge/search":
+                return web.json_response({
+                    "results": [
+                        {
+                            "id": "ref-1",
+                            "score": 0.93,
+                            "rerank_score": 0.98,
+                            "text": "Penale massima consentita: 5% del valore contrattuale. Pagamento a 30 giorni.",
+                            "metadata": {"source_file": "playbook_legale.pdf", "tenant": "legal"},
+                        }
+                    ]
+                })
+            if path == "/v1/chat/completions":
+                body = await request.json()
+                sys_msg = body["messages"][0]["content"]
+                if "Legal & Compliance Auditor" in sys_msg:
+                    return web.json_response({"choices": [{"message": {"content": "NON CONFORME: penale al 20% supera il limite del 5% [POLICY-1]."}}]})
+                if "controller amministrativo" in sys_msg:
+                    return web.json_response({"choices": [{"message": {"content": "BLOCCATA PER DISCREPANZA: pagamento richiesto a vista anziché 30 giorni [DOC-1]."}}]})
+                return web.json_response({"choices": [{"message": {"content": "## Sintesi\nApprovato rilascio."}}]})
+            return web.Response(status=404)
+
+        server = web.Application()
+        server.router.add_route("*", "/{path:.*}", handler)
+        runner = web.AppRunner(server)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+
+        client = AIFactoryClient(base_url=f"http://127.0.0.1:{port}", api_key="sk-killer-test")
+        try:
+            # 1. PII Audit Report
+            pii_res = await pii_audit_pipeline(
+                client,
+                text="Contatto: Mario Rossi, mario@example.com, IBAN IT60X0542811101000000123456",
+            )
+            assert pii_res["entities_masked_total"] == 3
+            assert pii_res["gdpr_risk_level"] == "MEDIUM"
+
+            # 2. Meeting Minutes
+            audio_f = tmp_path / "sync.wav"
+            audio_f.write_bytes(b"RIFF")
+            meet_res = await meeting_minutes_pipeline(client, audio_f, collection="meetings", tenant="ops")
+            assert "<PERSON>" in meet_res["sanitized_transcript"]
+            assert meet_res["indexed"]["chunks_indexed"] == 1
+
+            # 3. Contract & Compliance Guardian
+            contract_f = tmp_path / "fornitore.txt"
+            contract_f.write_text("Contratto con Mario Rossi. Penale ritardo 20%.", encoding="utf-8")
+            audit_res = await contract_audit_pipeline(client, collection="legal_kb", file_path=contract_f, tenant="legal")
+            assert "NON CONFORME" in audit_res["audit_report"]
+            assert audit_res["policies_consulted"] == 1
+
+            # 4. Invoice Zero-Touch Reconciliation
+            inv_f = tmp_path / "fattura.txt"
+            inv_f.write_text("Fattura 101 di Mario Rossi. Pagamento immediato a vista.", encoding="utf-8")
+            inv_res = await invoice_reconcile_pipeline(client, collection="legal_kb", file_path=inv_f, tenant="legal")
+            assert "BLOCCATA PER DISCREPANZA" in inv_res["reconciliation_report"]
         finally:
             await runner.cleanup()
 

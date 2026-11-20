@@ -7,6 +7,10 @@ from flows.sdk import AIFactoryClient
 from flows.pipelines.ingest_safe import safe_ingest_pipeline
 from flows.pipelines.rag_assistant import rag_answer_pipeline
 from flows.pipelines.voice_support import voice_rag_pipeline
+from flows.pipelines.pii_audit import pii_audit_pipeline
+from flows.pipelines.meeting_minutes import meeting_minutes_pipeline
+from flows.pipelines.contract_audit import contract_audit_pipeline
+from flows.pipelines.invoice_reconcile import invoice_reconcile_pipeline
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,6 +36,30 @@ def build_parser() -> argparse.ArgumentParser:
     p_voice.add_argument("--audio", required=True, type=Path, help="File audio domanda")
     p_voice.add_argument("--collection", required=True, help="Nome della collection pgvector")
     p_voice.add_argument("--tenant", default=None, help="Filtro tenant opzionale")
+
+    p_pii = sub.add_parser("pii-report", help="Scansiona un file o testo e genera un report di rischio GDPR")
+    p_pii.add_argument("--file", type=Path, default=None, help="File da analizzare (PDF, DOCX, TXT, PNG, JPG)")
+    p_pii.add_argument("--text", default=None, help="Testo grezzo da analizzare")
+    p_pii.add_argument("--language", default="it", help="Lingua Presidio/OCR (default: it)")
+
+    p_meet = sub.add_parser("meeting-minutes", help="Trascrive audio riunione, anonimizza PII ed estrae verbale")
+    p_meet.add_argument("--audio", required=True, type=Path, help="File audio della riunione")
+    p_meet.add_argument("--collection", default=None, help="Collection pgvector opzionale in cui archiviare il verbale")
+    p_meet.add_argument("--tenant", default="default", help="Identificativo tenant")
+    p_meet.add_argument("--language", default="it", help="Lingua audio/Presidio (default: it)")
+
+    p_contract = sub.add_parser("contract-audit", help="Killer App: verifica conformità contratto contro playbook su pgvector")
+    p_contract.add_argument("--file", required=True, type=Path, help="Contratto fornitore (PDF, DOCX, TXT, scansione)")
+    p_contract.add_argument("--collection", required=True, help="Collection pgvector contenente le policy aziendali")
+    p_contract.add_argument("--tenant", default=None, help="Filtro tenant per le policy")
+    p_contract.add_argument("--language", default="it", help="Lingua OCR/Presidio (default: it)")
+
+    p_invoice = sub.add_parser("invoice-reconcile", help="Killer App: riconcilia fattura/ricevuta contro contratti su pgvector")
+    p_invoice.add_argument("--file", required=True, type=Path, help="Fattura o scontrino (PDF, immagine, TXT)")
+    p_invoice.add_argument("--collection", required=True, help="Collection pgvector con contratti/ordini approvati")
+    p_invoice.add_argument("--tenant", default=None, help="Filtro tenant")
+    p_invoice.add_argument("--language", default="it", help="Lingua OCR/Presidio (default: it)")
+    p_invoice.add_argument("--archive", action="store_true", help="Salva il report di riconciliazione nella collection")
 
     return parser
 
@@ -60,6 +88,38 @@ async def run_cli(args: argparse.Namespace) -> None:
             audio_path=args.audio,
             collection=args.collection,
             tenant=args.tenant,
+        )
+    elif args.command == "pii-report":
+        res = await pii_audit_pipeline(
+            client=client,
+            text=args.text,
+            file_path=args.file,
+            language=args.language,
+        )
+    elif args.command == "meeting-minutes":
+        res = await meeting_minutes_pipeline(
+            client=client,
+            audio_path=args.audio,
+            collection=args.collection,
+            tenant=args.tenant,
+            language=args.language,
+        )
+    elif args.command == "contract-audit":
+        res = await contract_audit_pipeline(
+            client=client,
+            collection=args.collection,
+            file_path=args.file,
+            tenant=args.tenant,
+            language=args.language,
+        )
+    elif args.command == "invoice-reconcile":
+        res = await invoice_reconcile_pipeline(
+            client=client,
+            collection=args.collection,
+            file_path=args.file,
+            tenant=args.tenant,
+            language=args.language,
+            archive_result=args.archive,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")

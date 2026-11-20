@@ -55,6 +55,41 @@ Transcribes an audio query with Whisper, runs the RAG Q&A pipeline, and synthesi
 python -m flows.runner voice-ask   --audio ./question.wav   --collection enterprise_docs   --tenant acme
 ```
 
+
+### 4. Privacy Audit & GDPR Risk Report (`pii-report`)
+
+Scans a document or text via OCR/Docling + Presidio and produces a structured GDPR risk summary with entity counts:
+
+```bash
+python -m flows.runner pii-report --file ./customer_export.txt --language it
+```
+
+### 5. Executive Meeting Minutes (`meeting-minutes`)
+
+Transcribes recorded meetings via Whisper, masks participant PII via Presidio, generates executive action items, and optionally indexes the minutes into `pgvector`:
+
+```bash
+python -m flows.runner meeting-minutes --audio ./board_sync.mp3 --collection meetings_kb --tenant exec
+```
+
+### 6. Killer App: Contract & Compliance Guardian (`contract-audit`)
+
+Extracts a supplier contract (PDF/DOCX/scan), masks counterparty PII locally via Presidio, retrieves relevant company playbook clauses from `pgvector`, and produces a compliance & redlining report:
+
+```bash
+python -m flows.runner contract-audit --file ./supplier_contract.pdf --collection legal_playbook --tenant legal
+```
+
+### 7. Killer App: Invoice Zero-Touch Reconciliation (`invoice-reconcile`)
+
+Reads an invoice or receipt (scan/PDF/text), masks PII, matches it against approved contracts/POs in `pgvector`, and flags amount or payment-term discrepancies:
+
+```bash
+python -m flows.runner invoice-reconcile --file ./invoice_scan.png --collection finance_kb --tenant finance --archive
+```
+
+*(Note: All interactive flows above can also be launched directly from the browser in the **Operations Console** at `/console/` under **3. Killer App Flows & RAG**.)*
+
 ## Programmatic Usage (`AIFactoryClient`)
 
 ```python
